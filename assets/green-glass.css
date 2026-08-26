@@ -1,0 +1,244 @@
+/* ============================================================
+   green-glass · 绿透
+   Obsidian 暗色流体玻璃皮肤（CSS snippet）
+
+   来源：卡尔「绿透工作台」视觉系统（2026-08，按真实参考视频取值）
+   仓库：LearnPrompt/green-glass
+
+   体系约定（改色前先读）：
+   - 底是纯黑，面板只比它亮一点点，全靠 1px 白色 6% 描边分层
+   - 绿只有三种用法：
+       1. 信号点（9px 圆点 + 光晕）
+       2. 深绿实底（主按钮：主绿降到 L11% 做底 + 主绿 34% 描边 + 白字）
+       3. 绿字徽章（主绿 13% 做底 + 主绿提到 L62% 做字）
+     除此之外绿不出现，尤其不做大面积绿色填充
+   - 主绿 #0ac98c = hsl(161, 90%, 41%)，想换色只改下面三个 --accent 值
+
+   只作用于暗色模式（body.theme-dark），亮色模式下自动不生效。
+   不改字体——你的字体设置保持原样。
+   ============================================================ */
+
+/* ---------- 1. 主绿与底色阶 ---------- */
+
+body.theme-dark {
+  /* 主绿：改这三个值即可整体换色 */
+  --accent-h: 161;
+  --accent-s: 90%;
+  --accent-l: 41%;
+
+  /* 底色阶：#000 页面底 → #050807 侧栏 → #0a0e0c 面板 → #101613 卡中卡 → #1b211e 选中 */
+  --background-primary: #000000;
+  --background-primary-alt: #0a0e0c;
+  --background-secondary: #050807;
+  --background-secondary-alt: #0a0e0c;
+
+  --background-modifier-hover: rgba(255, 255, 255, 0.045);
+  --background-modifier-active-hover: #1b211e;
+  --background-modifier-border: rgba(255, 255, 255, 0.06);
+  --background-modifier-border-hover: rgba(255, 255, 255, 0.1);
+  --background-modifier-border-focus: hsla(161, 90%, 41%, 0.34);
+  --background-modifier-form-field: #0a0e0c;
+
+  --titlebar-background: #000000;
+  --titlebar-background-focused: #000000;
+
+  --divider-color: rgba(255, 255, 255, 0.06);
+  --hr-color: rgba(255, 255, 255, 0.08);
+  --scrollbar-bg: transparent;
+  --scrollbar-thumb-bg: rgba(255, 255, 255, 0.08);
+  --scrollbar-active-thumb-bg: rgba(255, 255, 255, 0.16);
+
+  /* 文字阶：主 #f4f8f6 · 次 62% · 弱 45%（faint 走 38%） */
+  --text-normal: #e8efeb;
+  --text-muted: rgba(232, 239, 235, 0.62);
+  --text-faint: rgba(232, 239, 235, 0.38);
+  --text-on-accent: #f2fbf6;
+  --text-accent: hsl(161, 78%, 55%);
+  --text-accent-hover: hsl(161, 85%, 68%);
+  --link-color: hsl(161, 78%, 55%);
+  --link-color-hover: hsl(161, 85%, 68%);
+  --link-unresolved-color: rgba(232, 239, 235, 0.45);
+
+  --text-selection: hsla(161, 90%, 41%, 0.22);
+  --text-highlight-bg: hsla(161, 90%, 41%, 0.18);
+  --caret-color: hsl(161, 90%, 55%);
+
+  /* 圆角：面板 16 · 控件 12 · 小件 7 */
+  --radius-s: 7px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-xl: 16px;
+
+  /* 交互件 */
+  --interactive-normal: #101613;
+  --interactive-hover: #1b211e;
+  /* 深绿实底（绿的第二用法） */
+  --interactive-accent: hsl(161, 90%, 11%);
+  --interactive-accent-hover: hsl(161, 90%, 15%);
+
+  /* 复选框（信号绿） */
+  --checkbox-color: hsl(161, 90%, 41%);
+  --checkbox-color-hover: hsl(161, 90%, 48%);
+  --checkbox-border-color: rgba(255, 255, 255, 0.2);
+  --checkbox-border-color-hover: hsla(161, 90%, 41%, 0.5);
+  --checkbox-marker-color: #04150d;
+
+  /* 标签 = 绿字徽章（绿的第三用法） */
+  --tag-background: hsla(161, 90%, 41%, 0.13);
+  --tag-background-hover: hsla(161, 90%, 41%, 0.2);
+  --tag-color: hsl(161, 80%, 62%);
+  --tag-color-hover: hsl(161, 85%, 70%);
+  --tag-border-color: transparent;
+  --tag-border-color-hover: transparent;
+  --tag-radius: 6px;
+
+  /* 代码块 / 引用 */
+  --code-background: #0a0e0c;
+  --code-normal: rgba(232, 239, 235, 0.85);
+  --blockquote-border-color: hsla(161, 90%, 41%, 0.4);
+
+  /* 关系图谱 */
+  --graph-node: rgba(232, 239, 235, 0.55);
+  --graph-node-focused: hsl(161, 90%, 45%);
+  --graph-node-tag: hsl(161, 60%, 40%);
+  --graph-node-attachment: #ffb457;
+  --graph-line: rgba(255, 255, 255, 0.08);
+
+  /* 侧栏文件树 */
+  --nav-item-color: rgba(232, 239, 235, 0.62);
+  --nav-item-color-hover: #e8efeb;
+  --nav-item-color-active: #f4f8f6;
+  --nav-item-background-hover: rgba(255, 255, 255, 0.045);
+  --nav-item-background-active: #1b211e;
+  --nav-item-weight-active: 600;
+
+  /* 标签页 */
+  --tab-background-active: #000000;
+  --tab-text-color: rgba(232, 239, 235, 0.5);
+  --tab-text-color-focused: rgba(232, 239, 235, 0.7);
+  --tab-text-color-focused-active: #f4f8f6;
+  --tab-text-color-focused-active-current: #f4f8f6;
+
+  /* 弹层 / 命令面板 */
+  --modal-background: #0a0e0c;
+  --modal-border-color: rgba(255, 255, 255, 0.08);
+  --prompt-border-color: rgba(255, 255, 255, 0.08);
+
+  /* 状态栏 */
+  --status-bar-background: #000000;
+  --status-bar-border-color: rgba(255, 255, 255, 0.06);
+  --status-bar-text-color: rgba(232, 239, 235, 0.38);
+}
+
+/* ---------- 2. 主按钮：深绿实底 + 绿描边 + 白字 ---------- */
+
+body.theme-dark button.mod-cta,
+body.theme-dark .mod-cta {
+  background-color: hsl(161, 90%, 11%);
+  border: 1px solid hsla(161, 90%, 41%, 0.34);
+  color: #f2fbf6;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+body.theme-dark button.mod-cta:hover,
+body.theme-dark .mod-cta:hover {
+  background-color: hsl(161, 90%, 15%);
+  border-color: hsla(161, 90%, 41%, 0.5);
+}
+
+body.theme-dark button:not(.mod-cta):not(.clickable-icon) {
+  background-color: #151c19;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(232, 239, 235, 0.75);
+  border-radius: 999px;
+}
+
+body.theme-dark button:not(.mod-cta):not(.clickable-icon):hover {
+  background-color: #1b211e;
+  color: #e8efeb;
+}
+
+/* ---------- 3. 信号点：当前文件左侧 9px 绿点 + 光晕 ---------- */
+
+body.theme-dark .nav-file-title.is-active::before {
+  content: "";
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-right: 7px;
+  border-radius: 999px;
+  background: hsl(161, 90%, 45%);
+  box-shadow:
+    0 0 10px hsla(161, 90%, 45%, 0.55),
+    0 0 0 3px hsla(161, 90%, 45%, 0.14);
+}
+
+body.theme-dark .nav-file-title.is-active {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* ---------- 4. 面板感：1px 描边分层 ---------- */
+
+body.theme-dark .workspace-split.mod-left-split .workspace-tabs,
+body.theme-dark .workspace-split.mod-right-split .workspace-tabs {
+  background: #050807;
+}
+
+body.theme-dark .workspace-leaf {
+  background: #000000;
+}
+
+body.theme-dark .workspace-split.mod-root .workspace-tabs .workspace-leaf {
+  border-radius: 0;
+}
+
+/* 嵌入块 / callout 当卡中卡处理 */
+body.theme-dark .markdown-embed,
+body.theme-dark .callout {
+  background: #0a0e0c;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+body.theme-dark .callout {
+  --callout-border-width: 0;
+}
+
+/* 表格 */
+body.theme-dark .markdown-rendered table,
+body.theme-dark .markdown-source-view table {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+}
+
+body.theme-dark .markdown-rendered th,
+body.theme-dark .markdown-source-view th {
+  color: rgba(232, 239, 235, 0.62);
+  font-size: 0.82em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* 输入框胶囊化 */
+body.theme-dark input.prompt-input,
+body.theme-dark .search-input-container input {
+  background: #0a0e0c;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+}
+
+body.theme-dark input.prompt-input:focus,
+body.theme-dark .search-input-container input:focus {
+  border-color: hsla(161, 90%, 41%, 0.34);
+  box-shadow: 0 0 0 3px hsla(161, 90%, 41%, 0.1);
+}
+
+/* ---------- 5. 状态色（体系里的琥珀与珊瑚） ---------- */
+
+body.theme-dark {
+  --color-yellow: #ffb457; /* 注意琥珀 */
+  --color-orange: #ff8f6b; /* 告警橙 */
+  --color-red: #ff7d6b;    /* 风险红 */
+  --color-green: hsl(161, 90%, 45%);
+}
