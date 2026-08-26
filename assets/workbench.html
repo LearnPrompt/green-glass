@@ -7,15 +7,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
 <script>
 /* ============================================================
-   绿透工作台 · 数据配置
-   改这里就是你的工作台，不用动下面的代码。
+   绿透工作台 · 示意数据
+   真实数据由 scripts/collect.py 生成的 workbench-data.js 提供，
+   放在本文件同目录即自动生效；没有它就显示下面这份示意数据。
    ============================================================ */
 window.WORKBENCH = {
   owner: "CARL",
   workspace: "Workbench",
   title: "工作台",
   subtitle: "项目推进 · 自动化 · 会话",
-  accentH: 161,   // 主色相：161 翠绿 / 197 冰蓝 / 250 紫 / 改一个数字整站换色
+  accentH: 161,
   stats: [
     { cap: "Today / 今日产出",  name: "案例入库",   value: "148", unit: "条",   note: "较昨日", delta: "↑ 20%", tone: "up" },
     { cap: "Running / 在跑",    name: "运行中会话", value: "3",   unit: "个",   note: "较昨日", delta: "↑ 1",   tone: "up" },
@@ -34,6 +35,13 @@ window.WORKBENCH = {
       { text: "carlwow JD 细则",   days: 21 }
     ]
   },
+  projects: [
+    { name: "goodcase.ai",   branch: "main",         dirty: 3, when: "14 分钟前", note: "R2 迁移收尾",     status: "在跑" },
+    { name: "ai-news-radar", branch: "feat/persona", dirty: 0, when: "2 小时前",  note: "v0.7 Persona",    status: "待复核" },
+    { name: "skill-sync",    branch: "main",         dirty: 0, when: "3 天前",    note: "审计报告",        status: "干净" },
+    { name: "carlwow.com",   branch: "main",         dirty: 0, when: "昨天",      note: "JD 细则待补",     status: "干净" },
+    { name: "humanize-ppt",  branch: "main",         dirty: 0, when: "2 个月前",  note: "v1.0.0 已发布",   status: "久置" }
+  ],
   ring: [
     { id: "RP · 04", name: "skill-sync",    sub: "干净 · 空闲" },
     { id: "RP · 03", name: "ai-news-radar", sub: "feat/persona · 待复核" },
@@ -53,8 +61,7 @@ window.WORKBENCH = {
       ["当前分支", "main · +3"],
       ["上次部署", "08-27 00:41"],
       ["当前状态", "●在跑"],
-      ["风险", "◦高"],
-      ["标签", "采集 / SEO / +2"]
+      ["风险", "◦高"]
     ],
     advice: [
       "先合 PR #77，迁移脚本依赖它的字段",
@@ -64,56 +71,36 @@ window.WORKBENCH = {
   quota: { value: 62, reset: "08-31 重置" }
 };
 </script>
+<script src="./workbench-data.js"></script>
 <style>
-  /* ======== 绿透 token（与 design-tokens.md 一致） ======== */
   :root {
     --h: 161;
-    --bg: #000000;
-    --rail: #050807;
-    --panel: #0a0e0c;
-    --card: #101613;
-    --active: #1b211e;
-    --line: rgba(255,255,255,.06);
-    --line-2: rgba(255,255,255,.07);
-    --line-3: rgba(255,255,255,.045);
-    --fg: #e8efeb;
-    --fg-strong: #f4f8f6;
-    --fg-2: rgba(232,239,235,.62);
-    --fg-3: rgba(232,239,235,.45);
-    --fg-4: rgba(232,239,235,.34);
-    --green: hsl(var(--h), 90%, 41%);
-    --green-hi: hsl(var(--h), 90%, 45%);
-    --green-text: hsl(var(--h), 80%, 62%);
-    --green-deep: hsl(var(--h), 90%, 11%);
+    --bg: #000000; --rail: #050807; --panel: #0a0e0c; --card: #101613; --active: #1b211e;
+    --line: rgba(255,255,255,.06); --line-2: rgba(255,255,255,.07); --line-3: rgba(255,255,255,.045);
+    --fg: #e8efeb; --fg-strong: #f4f8f6;
+    --fg-2: rgba(232,239,235,.62); --fg-3: rgba(232,239,235,.45); --fg-4: rgba(232,239,235,.34);
+    --green: hsl(var(--h), 90%, 41%); --green-hi: hsl(var(--h), 90%, 45%);
+    --green-text: hsl(var(--h), 80%, 62%); --green-deep: hsl(var(--h), 90%, 11%);
     --green-deep-hover: hsl(var(--h), 90%, 15%);
-    --amber: #ffb457;
-    --orange: #ff8f6b;
-    --red: #ff7d6b;
+    --amber: #ffb457; --orange: #ff8f6b; --red: #ff7d6b;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
-  body {
-    background: var(--bg);
-    color: var(--fg);
-    font-family: 'Space Grotesk', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
-    font-size: 14px;
-    overflow: hidden;
-  }
+  body { background: var(--bg); color: var(--fg); font-family: 'Space Grotesk', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif; font-size: 14px; overflow: hidden; }
   .mono { font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace; font-feature-settings: 'tnum' 1; }
   .cap  { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; }
-
   .app { display: flex; height: 100vh; }
 
-  /* ======== 左侧导航 ======== */
   .rail { width: 232px; flex-shrink: 0; display: flex; flex-direction: column; padding: 22px 14px; background: var(--rail); border-right: 1px solid var(--line); }
   .brand { display: flex; align-items: baseline; gap: 9px; padding: 4px 10px 22px; }
   .brand b { font-size: 17px; font-weight: 700; letter-spacing: .02em; color: var(--fg-strong); }
   .brand span { font-size: 12.5px; font-weight: 500; color: var(--fg-2); }
   .nav { display: flex; flex-direction: column; gap: 2px; }
-  .nav a { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; color: var(--fg-2); font-size: 13.5px; text-decoration: none; cursor: pointer; }
+  .nav a { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; color: var(--fg-2); font-size: 13.5px; text-decoration: none; cursor: pointer; border: 1px solid transparent; }
   .nav a:hover { background: rgba(255,255,255,.045); color: var(--fg); }
-  .nav a.on { background: var(--active); border: 1px solid var(--line-2); color: var(--fg-strong); font-weight: 600; }
+  .nav a.on { background: var(--active); border-color: var(--line-2); color: var(--fg-strong); font-weight: 600; }
   .nav a svg { width: 16px; height: 16px; stroke: rgba(232,239,235,.42); flex-shrink: 0; }
+  .nav a .cnt { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--fg-4); }
   .dot { width: 9px; height: 9px; border-radius: 999px; background: var(--green-hi); box-shadow: 0 0 12px hsla(var(--h),90%,45%,.55), 0 0 0 3px hsla(var(--h),90%,45%,.14); }
   .dot-wrap { width: 16px; display: flex; justify-content: center; flex-shrink: 0; }
   .quota { margin-top: auto; padding: 15px; border-radius: 14px; background: #0c110f; border: 1px solid var(--line); }
@@ -122,7 +109,6 @@ window.WORKBENCH = {
   .bar { margin-top: 11px; height: 3px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
   .bar i { display: block; height: 100%; border-radius: 99px; background: var(--green); }
 
-  /* ======== 主区 ======== */
   .main { flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 22px 24px; min-width: 0; overflow: auto; }
   .top { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
   .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.015em; color: var(--fg-strong); }
@@ -134,7 +120,6 @@ window.WORKBENCH = {
   .cta { display: flex; align-items: center; gap: 8px; margin-left: auto; padding: 10px 18px; border-radius: 999px; background: var(--green-deep); border: 1px solid hsla(var(--h),90%,41%,.34); color: #f2fbf6; font-size: 13px; font-weight: 600; cursor: pointer; }
   .cta:hover { background: var(--green-deep-hover); border-color: hsla(var(--h),90%,41%,.5); }
 
-  /* ======== 流体玻璃卡 ======== */
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
   .fcard { position: relative; overflow: hidden; height: 146px; border-radius: 16px; background: #080b0a; border: 1px solid var(--line-2); }
   .fluid { position: absolute; inset: -18%; filter: blur(30px); opacity: .82; }
@@ -152,36 +137,32 @@ window.WORKBENCH = {
   .fcard .val span { font-size: 11.5px; color: rgba(255,255,255,.72); }
   .fcard .note { display: flex; gap: 6px; margin-top: 8px; font-size: 10.5px; color: rgba(255,255,255,.6); }
   .fcard .note b { font-weight: 600; }
-  .tone-up   { color: var(--green-text); }
-  .tone-warn { color: var(--amber); }
-  .tone-risk { color: var(--orange); }
+  .tone-up { color: var(--green-text); } .tone-warn { color: var(--amber); } .tone-risk { color: var(--orange); }
 
-  /* ======== 三栏 ======== */
   .grid { flex: 1; display: grid; grid-template-columns: 262px minmax(0,1fr) 316px; gap: 14px; min-height: 480px; }
   .panel { border-radius: 16px; background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
   .panel .hd { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 0; }
   .panel .hd b { font-size: 15px; font-weight: 700; color: var(--fg-strong); }
   .panel .hd .mono { font-size: 10px; color: rgba(232,239,235,.32); }
 
-  .chips { display: flex; gap: 6px; padding: 13px 16px 0; }
-  .chip { font-size: 11.5px; padding: 5px 11px; border-radius: 999px; color: var(--fg-3); cursor: pointer; }
-  .chip.on { background: #171f1b; color: #eafaf2; }
   .qgroup { display: flex; align-items: center; gap: 8px; padding: 14px 16px 9px; font-size: 12px; color: var(--fg-2); }
   .qgroup .mono { font-size: 11px; color: rgba(232,239,235,.4); }
   .qdot { width: 6px; height: 6px; border-radius: 99px; flex-shrink: 0; }
-  .qrow { display: flex; align-items: center; gap: 8px; padding: 9px 16px; border-top: 1px solid var(--line-3); font-size: 12.5px; color: #e2ebe6; cursor: default; }
+  .qrow { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-top: 1px solid var(--line-3); font-size: 12.5px; color: #e2ebe6; cursor: pointer; }
   .qrow:hover { background: rgba(255,255,255,.03); }
   .qrow .mono { font-size: 9.5px; color: var(--fg-4); }
+  .qrow.done .txt { color: var(--fg-4); text-decoration: line-through; }
+  .cb { width: 17px; height: 17px; border-radius: 6px; border: 1.4px solid rgba(150,255,210,.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .qrow.done .cb { background: var(--green); border-color: var(--green); }
   .badge { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; padding: 2.5px 6px; border-radius: 5px; margin-left: auto; }
   .badge.todo { background: hsla(var(--h),90%,41%,.13); color: var(--green-text); }
   .badge.run  { background: rgba(255,180,87,.14); color: var(--amber); }
   .days { margin-left: auto; }
 
-  /* ======== 中央舞台 ======== */
   .stage-wrap { background: #070a09; }
   .toolbar { display: flex; align-items: center; gap: 8px; padding: 13px 15px; flex-wrap: wrap; }
   .tb { font-size: 11.5px; padding: 6px 12px; border-radius: 999px; background: #0d1210; border: 1px solid var(--line); color: rgba(232,239,235,.55); cursor: pointer; }
-  .tb.on { display: flex; align-items: center; gap: 6px; background: #171f1b; border: none; color: #eafaf2; }
+  .tb.on { display: flex; align-items: center; gap: 6px; background: #171f1b; border-color: transparent; color: #eafaf2; }
   .tb.on::before { content: ""; width: 5px; height: 5px; border-radius: 99px; background: var(--green-hi); }
   .stage { position: relative; flex: 1; min-height: 300px; }
   .stage .glowbg { position: absolute; inset: 0; background: radial-gradient(58% 46% at 50% 56%, hsla(var(--h),90%,41%,.09), transparent 70%); }
@@ -192,23 +173,19 @@ window.WORKBENCH = {
   .prog .bar { margin-top: 10px; background: rgba(255,255,255,.16); }
 
   .ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); display: flex; align-items: center; perspective: 1000px; }
-  .rcard { border-radius: 11px; background: linear-gradient(160deg, #f2f6f3, #d6ddd8); box-shadow: 0 18px 34px -18px rgba(0,0,0,.9); padding: 10px 9px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: transform .45s cubic-bezier(.4,0,.2,1), width .45s, height .45s; }
+  .rcard { border-radius: 11px; background: linear-gradient(160deg, #f2f6f3, #d6ddd8); box-shadow: 0 18px 34px -18px rgba(0,0,0,.9); padding: 10px 9px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
   .rcard .rid { font-family: 'JetBrains Mono', monospace; font-size: 7px; color: rgba(20,32,26,.5); }
   .rcard .ln { height: 1px; background: rgba(20,32,26,.14); }
-  .rcard .nm { margin-top: auto; font-size: 8px; font-weight: 700; color: rgba(20,32,26,.72); text-align: center; }
+  .rcard .nm { margin-top: auto; font-size: 8px; font-weight: 700; color: rgba(20,32,26,.72); text-align: center; word-break: break-all; }
   .rcard.p2 { width: 78px; height: 152px; z-index: 1; }
   .rcard.p1 { width: 94px; height: 176px; z-index: 2; margin-left: -6px; }
   .rcard.l2 { transform: rotateY(34deg) scale(.82); }
   .rcard.l1 { transform: rotateY(24deg) scale(.93); }
   .rcard.r1 { transform: rotateY(-24deg) scale(.93); }
   .rcard.r2 { transform: rotateY(-34deg) scale(.82); }
-  .rcard.focus {
-    width: 138px; height: 222px; z-index: 3; margin-left: -4px; margin-right: -4px;
-    position: relative; overflow: hidden; border-radius: 14px; transform: none;
+  .rcard.focus { width: 138px; height: 222px; z-index: 3; margin-left: -4px; margin-right: -4px; position: relative; overflow: hidden; border-radius: 14px; transform: none;
     background: linear-gradient(155deg, hsl(var(--h),75%,62%), hsl(var(--h),85%,36%));
-    box-shadow: 0 0 44px -6px hsla(var(--h),90%,45%,.55), 0 22px 44px -20px rgba(0,0,0,.95);
-    padding: 13px 12px;
-  }
+    box-shadow: 0 0 44px -6px hsla(var(--h),90%,45%,.55), 0 22px 44px -20px rgba(0,0,0,.95); padding: 13px 12px; }
   .rcard.focus .rid { font-size: 8px; color: rgba(255,255,255,.72); }
   .rcard.focus .ln { background: rgba(4,32,20,.5); opacity: .5; }
   .rcard.focus .nm { font-size: 11.5px; color: #fff; }
@@ -226,7 +203,6 @@ window.WORKBENCH = {
   .timeline .bar { margin-top: 10px; height: 4px; }
   .timeline .bar i { background: linear-gradient(90deg, hsla(var(--h),90%,41%,.25), var(--green)); }
 
-  /* ======== 右栏详情 ======== */
   .detail { padding: 16px; }
   .detail .dhd { display: flex; align-items: center; gap: 8px; padding-bottom: 13px; border-bottom: 1px solid rgba(255,255,255,.055); font-size: 14px; font-weight: 700; color: var(--fg-strong); }
   .dcode { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; color: rgba(232,239,235,.38); margin-top: 14px; }
@@ -237,7 +213,6 @@ window.WORKBENCH = {
   .drow { display: flex; align-items: center; margin-top: 12px; font-size: 12px; }
   .drow .k { width: 74px; color: var(--fg-3); flex-shrink: 0; }
   .drow .v { color: #e6eeea; font-size: 12.5px; }
-  .drow .v.mono { font-size: 12px; }
   .sdot { display: inline-block; width: 6px; height: 6px; border-radius: 99px; margin-right: 7px; vertical-align: 1px; }
   .advice { margin-top: 18px; padding: 14px; border-radius: 13px; background: var(--card); border: 1px solid rgba(255,255,255,.055); }
   .advice b { font-size: 12.5px; font-weight: 700; color: #eef4f0; }
@@ -250,23 +225,60 @@ window.WORKBENCH = {
   .dbtn.solid { background: var(--green-deep); border: 1px solid hsla(var(--h),90%,41%,.34); font-weight: 600; color: #f2fbf6; }
   .dbtn.solid:hover { background: var(--green-deep-hover); }
 
-  /* ======== 响应式 ======== */
+  /* ======== 项目索引视图 ======== */
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .pcard { padding: 17px; border-radius: 15px; background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .pcard .r1 { display: flex; align-items: center; gap: 8px; }
+  .pcard .r1 b { font-size: 14px; font-weight: 600; color: var(--fg-strong); word-break: break-all; }
+  .pdot { width: 7px; height: 7px; border-radius: 99px; flex-shrink: 0; }
+  .pstat { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 6px; flex-shrink: 0; }
+  .pcard .meta { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(232,239,235,.5); }
+  .pcard .note { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--fg-4); }
+
+  /* ======== 设置视图 ======== */
+  .setwrap { max-width: 640px; display: flex; flex-direction: column; gap: 14px; }
+  .setcard { padding: 18px; border-radius: 15px; background: var(--panel); border: 1px solid var(--line); }
+  .setcard > b { font-size: 14px; font-weight: 700; color: var(--fg-strong); }
+  .setcard .note { font-size: 12px; line-height: 1.7; color: var(--fg-2); margin-top: 8px; text-wrap: pretty; }
+  .swatches { display: flex; gap: 10px; margin-top: 13px; }
+  .sw { width: 34px; height: 34px; border-radius: 999px; cursor: pointer; border: 2px solid transparent; }
+  .sw.on { border-color: rgba(255,255,255,.85); }
+  input[type=range] { width: 100%; margin-top: 13px; accent-color: var(--green); }
+  .code { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.85; color: rgba(214,235,225,.75); background: var(--card); border: 1px solid var(--line-3); border-radius: 10px; padding: 12px 14px; margin-top: 11px; overflow-x: auto; white-space: pre; }
+
+  .live-tag { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 8px; border-radius: 6px; }
+  .live-tag.on  { background: hsla(var(--h),90%,41%,.13); color: var(--green-text); }
+  .live-tag.off { background: rgba(255,180,87,.12); color: var(--amber); }
+
   @media (max-width: 1180px) { .grid { grid-template-columns: 240px minmax(0,1fr); } .panel.dpanel { display: none; } }
   @media (max-width: 920px)  { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); } .grid { grid-template-columns: minmax(0,1fr); } .panel.qpanel { display: none; } .rail { display: none; } .search { margin-left: 0; } body { overflow: auto; } .app { height: auto; } }
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
+<div class="app">
+  <div class="rail">
+    <div class="brand" id="brand"></div>
+    <div class="nav" id="nav"></div>
+    <div class="quota" id="quota"></div>
+  </div>
+  <div class="main" id="main"></div>
+</div>
 <script>
 (function () {
+  /* ---- 数据合并：live 覆盖示意 ---- */
   var W = window.WORKBENCH;
+  var LIVE = window.WORKBENCH_LIVE || null;
+  if (LIVE) {
+    ["stats", "queue", "projects", "ring", "ringFocus", "detail"].forEach(function (k) {
+      if (LIVE[k] != null) W[k] = LIVE[k];
+    });
+  }
+  var h = parseInt(localStorage.getItem("gg-accent") || W.accentH, 10);
+  document.documentElement.style.setProperty("--h", h);
   document.title = "绿透 · " + W.title;
-  document.documentElement.style.setProperty("--h", W.accentH);
-  var h = W.accentH;
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
-  /* 流体卡色相偏移表（design-tokens.md） */
   var MESH = [
     [[0,1,.31],[16,.8,.22],[-22,.9,.27]],
     [[-10,.95,.27],[12,1,.33],[-34,.75,.20]],
@@ -281,20 +293,49 @@ window.WORKBENCH = {
   ];
   function meshColor(spec) {
     var hh = ((h + spec[0]) % 360 + 360) % 360;
-    var ss = Math.max(12, Math.min(95, 90 * spec[1]));
-    return "hsla(" + hh + "," + ss + "%," + (spec[2] * 100) + "%,.95)";
+    return "hsla(" + hh + "," + Math.max(12, Math.min(95, 90 * spec[1])) + "%," + (spec[2] * 100) + "%,.95)";
+  }
+  function statCard(s, i) {
+    var blobs = BLOBS[i % 4].map(function (pos, j) { return '<i style="' + pos + ';background:' + meshColor(MESH[i % 4][j]) + '"></i>'; }).join("");
+    return '<div class="fcard"><div class="fluid">' + blobs + '</div><div class="shade"></div><div class="sheen"></div>' +
+      '<div class="body"><div class="cap">' + esc(s.cap) + '</div><div class="name">' + esc(s.name) + '</div>' +
+      '<div class="val"><b>' + esc(s.value) + '</b><span>' + esc(s.unit) + '</span></div>' +
+      '<div class="note">' + esc(s.note) + ' <b class="tone-' + s.tone + '">' + esc(s.delta) + '</b></div></div></div>';
   }
 
-  function statCard(s, i) {
-    var blobs = BLOBS[i % 4].map(function (pos, j) {
-      return '<i style="' + pos + ';background:' + meshColor(MESH[i % 4][j]) + '"></i>';
-    }).join("");
-    return '<div class="fcard"><div class="fluid">' + blobs + '</div>' +
-      '<div class="shade"></div><div class="sheen"></div>' +
-      '<div class="body"><div class="cap">' + esc(s.cap) + '</div>' +
-      '<div class="name">' + esc(s.name) + '</div>' +
-      '<div class="val"><b>' + esc(s.value) + '</b><span>' + esc(s.unit) + '</span></div>' +
-      '<div class="note">' + esc(s.note) + ' <b class="tone-' + s.tone + '">' + esc(s.delta) + '</b></div>' +
+  /* ---- 队列行（可勾选，仅本机记忆） ---- */
+  var doneSet = {};
+  try { doneSet = JSON.parse(localStorage.getItem("gg-done") || "{}"); } catch (e) {}
+  function qrow(t) {
+    var done = !!doneSet[t.text];
+    return '<div class="qrow' + (done ? " done" : "") + '" data-t="' + esc(t.text) + '">' +
+      '<span class="cb">' + (done ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#04150d" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 7.2"/></svg>' : "") + '</span>' +
+      '<span class="txt">' + esc(t.text) + '</span>' +
+      '<span class="badge ' + (t.tone || "todo") + '">' + esc(t.badge || "待办") + '</span>' +
+      '<span class="mono">' + esc(t.time || "") + '</span></div>';
+  }
+  function brow(t) {
+    return '<div class="qrow"><span>' + esc(t.text) + '</span><span class="mono days">积压 ' + t.days + ' 天</span></div>';
+  }
+  function bindQueue(root) {
+    root.querySelectorAll(".qrow[data-t]").forEach(function (el) {
+      el.addEventListener("click", function () {
+        var k = el.dataset.t;
+        doneSet[k] = !doneSet[k];
+        if (!doneSet[k]) delete doneSet[k];
+        localStorage.setItem("gg-done", JSON.stringify(doneSet));
+        render();
+      });
+    });
+  }
+
+  function queuePanelHTML(cls) {
+    return '<div class="panel ' + cls + '">' +
+      '<div class="hd"><b>今日队列</b><span class="mono">' + (LIVE ? "vault 待办" : "示意数据") + '</span></div>' +
+      '<div style="margin-top:6px">' +
+      '<div class="qgroup"><span class="qdot" style="background:var(--green-hi);box-shadow:0 0 8px hsla(' + h + ',90%,45%,.55)"></span>近期待办 <span class="mono">' + W.queue.today.length + '</span></div>' +
+      W.queue.today.map(qrow).join("") +
+      (W.queue.backlog.length ? '<div class="qgroup" style="padding-top:16px"><span class="qdot" style="background:var(--amber)"></span>长期积压 <span class="mono">' + W.queue.backlog.length + '</span></div>' + W.queue.backlog.map(brow).join("") : "") +
       '</div></div>';
   }
 
@@ -309,32 +350,15 @@ window.WORKBENCH = {
     for (var j = 0; j < n; j++) lns += '<div class="ln"' + (j === 0 ? ' style="margin-top:3px"' : "") + '></div>';
     return '<div class="rcard p' + pos[1] + " " + pos + '" data-i="' + r._i + '"><div class="rid">' + esc(r.id) + '</div>' + lns + '<div class="nm">' + esc(r.name) + '</div></div>';
   }
-
-  function renderRing(focus) {
+  var focus = Math.min(W.ringFocus || 0, Math.max(W.ring.length - 1, 0));
+  function renderRing() {
+    if (!W.ring.length) return "";
     var items = W.ring.map(function (r, i) { r._i = i; return r; });
     var order = [], positions = ["l2", "l1", "focus", "r1", "r2"];
     for (var k = -2; k <= 2; k++) order.push(items[((focus + k) % items.length + items.length) % items.length]);
     return order.map(function (r, i) { return ringCard(r, positions[i]); }).join("");
   }
 
-  var navIcons = {
-    grid: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9h17M3.5 14.5h17M9 3.5v17M14.5 3.5v17"/></svg>',
-    cal: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M12 4.5v15"/></svg>',
-    bolt: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 13.6h6L10.2 21 18.6 10.2H12z"/></svg>',
-    term: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="m7.6 10 2.4 2.4-2.4 2.4M13 14.8h3.8"/></svg>',
-    book: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19.5v13.5H6.5A2.5 2.5 0 0 0 4 19z"/><path d="M4 19a2.5 2.5 0 0 1 2.5-2.5H19.5V21H6.5A2.5 2.5 0 0 1 4 19z"/></svg>',
-    chart: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M4 19.5h16"/><path d="M6.5 19.5v-6M11 19.5V7M15.5 19.5v-9M20 19.5V4.5"/></svg>',
-    gear: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1M18.7 18.7l-2.1-2.1M7.4 7.4 5.3 5.3"/></svg>'
-  };
-
-  function qrow(t) {
-    return '<div class="qrow"><span>' + esc(t.text) + '</span>' +
-      '<span class="badge ' + t.tone + '">' + esc(t.badge) + '</span>' +
-      '<span class="mono">' + esc(t.time) + '</span></div>';
-  }
-  function brow(t) {
-    return '<div class="qrow"><span>' + esc(t.text) + '</span><span class="mono days">积压 ' + t.days + ' 天</span></div>';
-  }
   function drow(r) {
     var v = esc(r[1])
       .replace("●", '<span class="sdot" style="background:var(--green-hi);box-shadow:0 0 8px hsla(' + h + ',90%,45%,.55)"></span>')
@@ -346,101 +370,182 @@ window.WORKBENCH = {
   var days = ["日","一","二","三","四","五","六"];
   var dateStr = (d.getMonth()+1) + "月" + d.getDate() + "日 · 周" + days[d.getDay()];
 
-  document.getElementById("app").innerHTML =
-    '<div class="rail">' +
-      '<div class="brand"><b>' + esc(W.owner) + '</b><span>' + esc(W.workspace) + '</span></div>' +
-      '<div class="nav">' +
-        '<a class="on"><span class="dot-wrap"><span class="dot"></span></span>今日总览</a>' +
-        '<a>' + navIcons.grid + '项目索引</a>' +
-        '<a>' + navIcons.cal + '今日队列</a>' +
-        '<a>' + navIcons.bolt + '自动化</a>' +
-        '<a>' + navIcons.term + '会话</a>' +
-        '<a>' + navIcons.book + '知识库</a>' +
-        '<a>' + navIcons.chart + '用量分析</a>' +
-        '<a>' + navIcons.gear + '设置中心</a>' +
-      '</div>' +
-      '<div class="quota"><div class="cap" style="color:var(--fg-4)">Quota / 本月额度</div>' +
-        '<div class="num"><b class="mono">' + W.quota.value + '</b><span class="mono" style="font-size:11px;color:var(--fg-3)">% 剩余</span></div>' +
-        '<div class="bar"><i style="width:' + W.quota.value + '%"></i></div>' +
-        '<div class="mono" style="margin-top:9px;font-size:10px;color:var(--fg-4)">' + esc(W.quota.reset) + '</div></div>' +
-    '</div>' +
+  function topbar(title, sub) {
+    return '<div class="top"><div><h1>' + esc(title) + '</h1><div class="sub">' + esc(sub) + '</div></div>' +
+      '<label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(232,239,235,.4)" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.6"/><path d="m16 16 4.2 4.2"/></svg>' +
+      '<input id="q" placeholder="搜索项目、任务…"><span class="mono" style="font-size:10px;color:var(--fg-4)">⌘K</span></label>' +
+      '<div class="cta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></svg>立即调度</div></div>';
+  }
 
-    '<div class="main">' +
-      '<div class="top">' +
-        '<div><h1>' + esc(W.title) + '</h1><div class="sub">' + dateStr + ' · ' + esc(W.subtitle) + '</div></div>' +
-        '<label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(232,239,235,.4)" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.6"/><path d="m16 16 4.2 4.2"/></svg>' +
-        '<input id="q" placeholder="搜索项目、任务或标签…"><span class="mono" style="font-size:10px;color:var(--fg-4)">⌘K</span></label>' +
-        '<div class="cta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></svg>立即调度</div>' +
-      '</div>' +
+  /* ================= 视图 ================= */
 
+  function viewOverview() {
+    var det = W.detail;
+    var html = topbar(W.title, dateStr + " · " + W.subtitle) +
       '<div class="stats">' + W.stats.map(statCard).join("") + '</div>' +
-
-      '<div class="grid">' +
-        '<div class="panel qpanel">' +
-          '<div class="hd"><b>今日队列</b><span class="mono">示意数据</span></div>' +
-          '<div class="chips"><span class="chip on">全部</span><span class="chip">我负责</span><span class="chip">已委派</span></div>' +
-          '<div style="margin-top:6px">' +
-            '<div class="qgroup"><span class="qdot" style="background:var(--green-hi);box-shadow:0 0 8px hsla(' + h + ',90%,45%,.55)"></span>今日新增 <span class="mono">' + W.queue.today.length + '</span></div>' +
-            W.queue.today.map(qrow).join("") +
-            '<div class="qgroup" style="padding-top:16px"><span class="qdot" style="background:var(--amber)"></span>长期积压 <span class="mono">' + W.queue.backlog.length + '</span></div>' +
-            W.queue.backlog.map(brow).join("") +
-          '</div>' +
+      '<div class="grid">' + queuePanelHTML("qpanel") +
+      '<div class="panel stage-wrap">' +
+        '<div class="toolbar"><span class="tb on">3D 环境</span><span class="tb" id="spin">自动巡航</span><span class="tb" id="resetV">复位视角</span>' +
+        '<span class="tb mono" style="margin-left:auto">' + (LIVE ? "生成 " + esc(LIVE.generated) : "示意") + '</span></div>' +
+        '<div class="stage"><div class="glowbg"></div>' +
+          '<div class="prog"><div class="t">' + esc(W.progress.label) + '</div><div class="v">' + W.progress.value + '%</div>' +
+          '<div class="s">' + esc(W.progress.sub) + '</div><div class="bar"><i style="width:' + W.progress.value + '%"></i></div></div>' +
+          '<div class="ring" id="ring">' + renderRing() + '</div>' +
+          '<div class="hint">点击卡片聚焦 · 队列点行勾掉 <b id="hintName">' + esc((W.ring[focus] || {}).name || "") + '</b></div>' +
         '</div>' +
-
-        '<div class="panel stage-wrap">' +
-          '<div class="toolbar"><span class="tb on">3D 环境</span><span class="tb">自动巡航</span><span class="tb">复位视角</span>' +
-          '<span class="tb mono" style="margin-left:auto">速度 2×</span><span class="tb">筛选</span></div>' +
-          '<div class="stage"><div class="glowbg"></div>' +
-            '<div class="prog"><div class="t">' + esc(W.progress.label) + '</div><div class="v">' + W.progress.value + '%</div>' +
-            '<div class="s">' + esc(W.progress.sub) + '</div><div class="bar"><i style="width:' + W.progress.value + '%"></i></div></div>' +
-            '<div class="ring" id="ring">' + renderRing(W.ringFocus) + '</div>' +
-            '<div class="hint">拖动卡环旋转 · 点击卡片聚焦 <b id="hintName">' + esc(W.ring[W.ringFocus].name) + '</b></div>' +
-          '</div>' +
-          '<div class="timeline"><div class="row1"><b>推进时间轴</b><span class="mono" style="font-size:10.5px;color:var(--fg-4)">' + d.getFullYear() + ' 年 ' + (d.getMonth()+1) + ' 月</span>' +
-          '<span class="tb mono" style="margin-left:auto;padding:4px 10px">月</span><span class="tb on mono" style="padding:4px 10px">今天</span></div>' +
-          '<div class="tl-days" id="tlDays"></div>' +
-          '<div class="bar"><i style="width:' + Math.round(d.getDate() / 31 * 100) + '%"></i></div></div>' +
-        '</div>' +
-
-        '<div class="panel dpanel detail">' +
-          '<div class="dhd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green-hi)" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 13.9 9l5.6 1.9-5.6 1.9L12 18.5l-1.9-5.7L4.5 10.9 10.1 9z"/></svg>智能详情</div>' +
-          '<div class="dcode">' + esc(W.detail.code) + '</div>' +
-          '<div class="dname"><b>' + esc(W.detail.name) + '</b><span class="dbadge">' + esc(W.detail.badge) + '</span></div>' +
-          '<div class="ddesc">' + esc(W.detail.desc) + '</div>' +
-          W.detail.rows.map(drow).join("") +
-          '<div class="advice"><b>调度建议</b>' + W.detail.advice.map(function (a) { return '<div class="li">' + esc(a) + '</div>'; }).join("") + '</div>' +
-          '<div class="dbtns"><div class="dbtn ghost">打开仓库</div><div class="dbtn solid">标记已推进</div></div>' +
-        '</div>' +
+        '<div class="timeline"><div class="row1"><b>推进时间轴</b><span class="mono" style="font-size:10.5px;color:var(--fg-4)">' + d.getFullYear() + ' 年 ' + (d.getMonth()+1) + ' 月</span>' +
+        '<span class="tb on mono" style="margin-left:auto;padding:4px 10px">今天</span></div>' +
+        '<div class="tl-days" id="tlDays"></div>' +
+        '<div class="bar"><i style="width:' + Math.round(d.getDate() / 31 * 100) + '%"></i></div></div>' +
       '</div>' +
-    '</div>';
+      '<div class="panel dpanel detail">' +
+        '<div class="dhd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green-hi)" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 13.9 9l5.6 1.9-5.6 1.9L12 18.5l-1.9-5.7L4.5 10.9 10.1 9z"/></svg>智能详情</div>' +
+        '<div class="dcode">' + esc(det.code) + '</div>' +
+        '<div class="dname"><b>' + esc(det.name) + '</b><span class="dbadge">' + esc(det.badge) + '</span></div>' +
+        '<div class="ddesc">' + esc(det.desc) + '</div>' + det.rows.map(drow).join("") +
+        '<div class="advice"><b>调度建议</b>' + det.advice.map(function (a) { return '<div class="li">' + esc(a) + '</div>'; }).join("") + '</div>' +
+        '<div class="dbtns"><div class="dbtn ghost">打开仓库</div><div class="dbtn solid">标记已推进</div></div>' +
+      '</div></div>';
+    return html;
+  }
 
-  /* 时间轴日期 */
-  (function () {
-    var el = document.getElementById("tlDays"), html = "", today = d.getDate();
-    var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    for (var i = -6; i <= 6; i++) {
-      var day = today + i;
-      if (day === today) { html += '<span class="today">' + day + "</span>"; }
-      else if (day < 1 || day > last) { html += '<span class="dim">' + ((day + last - 1) % last + 1) + "</span>"; }
-      else { html += "<span>" + day + "</span>"; }
+  function pStatColor(st) {
+    if (st === "在跑") return ["hsla(" + h + ",90%,41%,.13)", "var(--green-text)", "var(--green-hi)"];
+    if (st === "待复核") return ["rgba(255,180,87,.12)", "var(--amber)", "var(--amber)"];
+    if (st === "久置") return ["rgba(255,143,107,.12)", "var(--orange)", "var(--orange)"];
+    return ["rgba(150,255,210,.07)", "var(--fg-3)", "rgba(232,239,235,.35)"];
+  }
+  function viewProjects(filter) {
+    var list = W.projects.filter(function (p) { return !filter || (p.name + p.note + p.branch).toLowerCase().indexOf(filter) >= 0; });
+    return topbar("项目索引", (LIVE ? "扫描自本机 git 仓库 · 生成 " + LIVE.generated : "示意数据") + " · 共 " + list.length + " 个") +
+      '<div class="pgrid">' + list.map(function (p) {
+        var c = pStatColor(p.status);
+        return '<div class="pcard"><div class="r1">' +
+          '<span class="pdot" style="background:' + c[2] + (p.status === "在跑" ? ";box-shadow:0 0 10px " + c[2] : "") + '"></span>' +
+          '<b>' + esc(p.name) + '</b>' +
+          '<span class="pstat" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(p.status) + '</span></div>' +
+          '<div class="meta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="5" r="2.3"/><circle cx="6" cy="19" r="2.3"/><circle cx="18" cy="9" r="2.3"/><path d="M6 7.3v9.4"/><path d="M15.7 10.6a5.7 5.7 0 0 1-5.7 5.7H6"/></svg>' +
+          esc(p.branch) + (p.dirty ? " · " + p.dirty + " 个未提交" : " · 干净") + '</div>' +
+          '<div class="note">' + esc(p.when) + ' · ' + esc(p.note) + '</div></div>';
+      }).join("") + '</div>';
+  }
+
+  function viewQueue() {
+    return topbar("今日队列", (LIVE ? "来自 vault 的勾选框 · 点行勾掉（只记在本机浏览器）" : "示意数据 · 点行勾掉")) +
+      '<div style="max-width:720px">' + queuePanelHTML("") + '</div>';
+  }
+
+  function viewSettings() {
+    var presets = [[161, "翠绿"], [197, "冰蓝"], [250, "紫"], [345, "玫红"], [85, "青柠"]];
+    return topbar("设置中心", "改动即时生效，记在本机浏览器") +
+      '<div class="setwrap">' +
+      '<div class="setcard"><b>主色</b><div class="note">整套界面只认一个色相，绿的三种用法、流体卡、卡环全部跟着走。</div>' +
+        '<div class="swatches">' + presets.map(function (p) {
+          return '<span class="sw' + (p[0] === h ? " on" : "") + '" data-h="' + p[0] + '" title="' + p[1] + '" style="background:hsl(' + p[0] + ',90%,41%)"></span>';
+        }).join("") + '</div>' +
+        '<input type="range" id="hue" min="0" max="359" value="' + h + '">' +
+        '<div class="mono" style="margin-top:8px;font-size:11px;color:var(--fg-3)">accentH = <span id="hval">' + h + '</span></div></div>' +
+      '<div class="setcard"><b>数据来源</b><div class="note" style="display:flex;align-items:center;gap:10px">当前 ' +
+        (LIVE ? '<span class="live-tag on">● 本机实时数据 · 生成于 ' + esc(LIVE.generated) + '</span>' : '<span class="live-tag off">◌ 示意数据</span>') +
+        '</div><div class="note">刷新数据（扫 git 仓库 + Obsidian 待办，生成 workbench-data.js 放本文件旁）：</div>' +
+        '<div class="code">python3 collect.py --projects ~/projects \\\n  --vault ~/你的vault --out 本文件所在目录</div>' +
+        '<div class="note">配合绿透 skill 使用时直接说「刷新我的工作台」即可。</div></div>' +
+      '</div>';
+  }
+
+  /* ================= 路由与骨架 ================= */
+
+  var VIEWS = {
+    overview: { name: "今日总览", render: viewOverview },
+    projects: { name: "项目索引", render: viewProjects, icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9h17M3.5 14.5h17M9 3.5v17M14.5 3.5v17"/></svg>', cnt: function () { return W.projects.length; } },
+    queue:    { name: "今日队列", render: viewQueue, icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M12 4.5v15"/></svg>', cnt: function () { return W.queue.today.length; } },
+    settings: { name: "设置中心", render: viewSettings, icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1M18.7 18.7l-2.1-2.1M7.4 7.4 5.3 5.3"/></svg>' }
+  };
+  var current = "overview";
+
+  function renderNav() {
+    document.getElementById("brand").innerHTML = "<b>" + esc(W.owner) + "</b><span>" + esc(W.workspace) + "</span>";
+    document.getElementById("nav").innerHTML = Object.keys(VIEWS).map(function (id) {
+      var v = VIEWS[id], on = id === current;
+      var lead = id === "overview"
+        ? '<span class="dot-wrap"><span class="dot"' + (on ? "" : ' style="background:rgba(232,239,235,.3);box-shadow:none"') + '></span></span>'
+        : v.icon;
+      return '<a class="' + (on ? "on" : "") + '" data-v="' + id + '">' + lead + esc(v.name) +
+        (v.cnt ? '<span class="cnt">' + v.cnt() + "</span>" : "") + "</a>";
+    }).join("");
+    document.getElementById("quota").innerHTML =
+      '<div class="cap" style="color:var(--fg-4)">Quota / 本月额度</div>' +
+      '<div class="num"><b class="mono">' + W.quota.value + '</b><span class="mono" style="font-size:11px;color:var(--fg-3)">% 剩余</span></div>' +
+      '<div class="bar"><i style="width:' + W.quota.value + '%"></i></div>' +
+      '<div class="mono" style="margin-top:9px;font-size:10px;color:var(--fg-4)">' + esc(W.quota.reset) + '</div>';
+    document.getElementById("nav").querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function () { current = a.dataset.v; render(); });
+    });
+  }
+
+  function render(filter) {
+    renderNav();
+    var main = document.getElementById("main");
+    main.innerHTML = VIEWS[current].render(filter);
+    bindQueue(main);
+    var tl = document.getElementById("tlDays");
+    if (tl) {
+      var html = "", today = d.getDate(), last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      for (var i = -6; i <= 6; i++) {
+        var day = today + i;
+        if (day === today) html += '<span class="today">' + day + "</span>";
+        else if (day < 1 || day > last) html += '<span class="dim">' + ((day + last - 1) % last + 1) + "</span>";
+        else html += "<span>" + day + "</span>";
+      }
+      tl.innerHTML = html;
     }
-    el.innerHTML = html;
-  })();
+    var ring = document.getElementById("ring");
+    if (ring) ring.addEventListener("click", function (e) {
+      var card = e.target.closest(".rcard");
+      if (!card || card.classList.contains("focus")) return;
+      focus = +card.dataset.i;
+      ring.innerHTML = renderRing();
+      var hn = document.getElementById("hintName");
+      if (hn) hn.textContent = W.ring[focus].name;
+    });
+    var q = document.getElementById("q");
+    if (q) q.addEventListener("input", function () {
+      if (current === "projects") {
+        var val = q.value.trim().toLowerCase();
+        var keep = q.value;
+        render(val);
+        var q2 = document.getElementById("q");
+        q2.value = keep; q2.focus(); q2.setSelectionRange(keep.length, keep.length);
+      }
+    });
+    var hue = document.getElementById("hue");
+    if (hue) {
+      hue.addEventListener("input", function () {
+        h = +hue.value;
+        document.documentElement.style.setProperty("--h", h);
+        document.getElementById("hval").textContent = h;
+        localStorage.setItem("gg-accent", h);
+      });
+      main.querySelectorAll(".sw").forEach(function (sw) {
+        sw.addEventListener("click", function () {
+          h = +sw.dataset.h;
+          document.documentElement.style.setProperty("--h", h);
+          localStorage.setItem("gg-accent", h);
+          render();
+        });
+      });
+    }
+  }
 
-  /* 卡环点击聚焦 */
-  var focus = W.ringFocus;
-  document.getElementById("ring").addEventListener("click", function (e) {
-    var card = e.target.closest(".rcard");
-    if (!card || card.classList.contains("focus")) return;
-    focus = +card.dataset.i;
-    document.getElementById("ring").innerHTML = renderRing(focus);
-    document.getElementById("hintName").textContent = W.ring[focus].name;
-  });
-
-  /* ⌘K 聚焦搜索 */
   document.addEventListener("keydown", function (e) {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); document.getElementById("q").focus(); }
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      if (current !== "projects") { current = "projects"; render(); }
+      var q = document.getElementById("q"); if (q) q.focus();
+    }
   });
+
+  render();
 })();
 </script>
 </body>

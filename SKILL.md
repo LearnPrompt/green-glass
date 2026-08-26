@@ -15,13 +15,22 @@ description: 绿透——纯黑底 + 流体玻璃 + 克制翠绿的个人工作�
 4. 提醒：只在**暗色模式**生效；Obsidian 需要重载（Cmd/Ctrl+R）或重启才能读到新 snippet。
 5. 用户想换主色：改 snippet 顶部的 `--accent-h/s/l` 三个值即可，其余取值不动。
 
-## 路 B：直接给一个能打开的工作台页面
+## 路 B：装一个连着真数据的工作台页面
 
-`assets/workbench.html` 是做好的单文件工作台（流体玻璃卡、3D 卡环、队列、详情栏，无任何依赖，浏览器直接打开）。用户要「现成的」就走这条：
+`assets/workbench.html` 是单文件工作台（流体玻璃卡、3D 卡环、项目索引、队列、设置四个视图，无依赖，浏览器直接打开）。同目录有 `workbench-data.js` 就显示本机真数据，没有就显示示意数据。
 
-1. 复制 `assets/workbench.html` 到用户指定位置（默认 `~/Downloads/`）。
-2. 帮用户改文件头部的 `window.WORKBENCH` 配置块：名字、统计卡、队列、卡环项目、详情。只改数据，不动下面的代码。
-3. 换主色只改 `accentH` 一个数字。
+**首次安装（问询式，一次问全）：**
+
+1. 问用户两件事：git 项目根目录（如 `~/projects`）、Obsidian vault 路径（没有就跳过）。
+2. 跑采集：`python3 scripts/collect.py --projects <项目目录> --vault <vault> --out <目标目录>`
+   —— 扫 git 仓库（分支/未提交/今日提交/久置）+ vault 里的 `- [ ]` 勾选框（新的进待办、老的进积压），生成 `workbench-data.js`。只读不写任何仓库或笔记。
+3. 把 `assets/workbench.html` 和生成的 `workbench-data.js` 放同一目录（默认 `~/Downloads/`），打开给用户看。
+
+**「刷新我的工作台」**：重跑第 2 步同参数即可，页面刷新就是新数据。
+
+**从会话记录补待办**：collect.py 只认 vault 勾选框；当前对话里明确的待办事项，刷新时直接编辑 `workbench-data.js` 的 `queue.today` 数组补进去（保持同结构 `{text, badge, tone, time}`），这是 Claude 的活，不是脚本的。
+
+改名字、改主色：文件头 `window.WORKBENCH` 的 `owner/workspace`；主色在页面 设置中心 里点选即可（存浏览器）。
 
 ## 路 C：从零生成个人工作台 Web 应用
 

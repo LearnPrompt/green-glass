@@ -22,7 +22,13 @@ npx skills add LearnPrompt/green-glass -g
 
 **只想要现成的工作台页面：**
 
-下载 [`assets/workbench.html`](assets/workbench.html)，浏览器直接打开。文件头部有一个 `window.WORKBENCH` 配置块，改几行文字就是你的工作台；改 `accentH` 一个数字整站换色。
+下载 [`assets/workbench.html`](assets/workbench.html)，浏览器直接打开（四个视图都能点：总览 / 项目索引 / 今日队列 / 设置）。想接真数据，再跑一条命令生成 `workbench-data.js` 放它旁边：
+
+```bash
+python3 scripts/collect.py --projects ~/projects --vault ~/你的vault --out ~/Downloads
+```
+
+它会扫你的 git 仓库（分支、未提交、今日提交）和 Obsidian 里的 `- [ ]` 待办，只读不写。没有这个文件时页面显示示意数据。换主色在页面里的设置中心点一下就行。
 
 ![绿透工作台](screenshots/workbench.png)
 
@@ -47,7 +53,8 @@ npx skills add LearnPrompt/green-glass -g
 green-glass/
 ├── SKILL.md                      # skill 入口（三条工作流路由）
 ├── assets/green-glass.css        # Obsidian snippet 本体
-├── assets/workbench.html         # 单文件工作台页面（改配置块即用）
+├── assets/workbench.html         # 单文件工作台页面（四视图，可接真数据）
+├── scripts/collect.py            # 本地采集：git 仓库 + vault 待办 → workbench-data.js
 ├── references/design-tokens.md   # 完整设计 token 表
 ├── references/workbench-prompt.md# 工作台生成提示语模板
 └── screenshots/                  # 效果图
@@ -68,7 +75,7 @@ Then tell your AI coding tool "apply green-glass to my Obsidian" or "generate a 
 **Without the skill:**
 
 - *Obsidian skin only*: drop [`assets/green-glass.css`](assets/green-glass.css) into your vault's `.obsidian/snippets/`, enable it under Settings → Appearance → CSS snippets, switch to dark mode. Uninstall = delete one file.
-- *Ready-made workbench*: download [`assets/workbench.html`](assets/workbench.html) and open it in a browser — edit the `window.WORKBENCH` config block at the top to make it yours; change `accentH` to recolor the whole page.
+- *Ready-made workbench*: download [`assets/workbench.html`](assets/workbench.html) and open it in a browser. To feed it real data, run `python3 scripts/collect.py --projects ~/projects --vault ~/your-vault --out <same dir>` — it scans your git repos and Obsidian `- [ ]` tasks (read-only) into `workbench-data.js`. Recolor from the built-in settings view.
 - *Prompt only*: open [`references/workbench-prompt.md`](references/workbench-prompt.md), fill in the placeholders, paste the whole thing into any AI coding tool.
 
 **The system in one breath**: pure black `#000000` base, panels separated by 1px white-6% borders instead of shadows; the accent green `#0ac98c` has exactly three permitted uses (signal dot, deep-green solid button, green-text badge); the only colored surface is a row of fluid-glass stat cards whose hues drift toward amber. Full token table in [`references/design-tokens.md`](references/design-tokens.md).
