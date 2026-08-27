@@ -36,6 +36,8 @@ npx skills add LearnPrompt/green-glass -g
 - **3D 项目卡环**：最近活跃的仓库排成透视卡环，点击聚焦，聚焦卡发光
 - **今日队列（混合模式）**：自动扫 Obsidian 里的 `- [ ]` 勾选框，加上 AI 从会话里策展的待办，条条带来源文件名，点行勾掉
 - **项目索引**：全部仓库的分支 / 未提交改动 / 最近提交，搜索框实时过滤
+- **订阅区块**：采集命令加 `--rss <源地址>`，任何 RSS/Atom 源直接上墙；`customSections` 协议开放，任何脚本都能投喂自定义区块
+- **安静模式**：一键关掉全部动效和自动巡航，页面完全静止；积压任务可归档（不动源文件）
 - **调色面板**：Original / Cyan / Klein / Chrome 四个预设，主色 A · 辅色 B · 阴影 C 三色自定义，底色不透明度、流动速度、流体强度、鼠标扰动全部可调，改动记在浏览器里
 
 ![调色面板](screenshots/material-panel.png)
@@ -112,6 +114,8 @@ It asks for your directories, scans your git repos and Obsidian tasks, and produ
 - **A 3D project ring** — your most recently active repos in a perspective carousel; click to focus
 - **Today's queue (hybrid mode)** — auto-collected `- [ ]` checkboxes from your Obsidian vault plus AI-curated tasks from your sessions, each labeled with its source file; click a row to check it off
 - **Project index** — every repo's branch, uncommitted changes, and last commit, with live search
+- **Feed sections** — pass `--rss <urls>` to the collector to put any RSS/Atom feed on the wall; the open `customSections` protocol lets any script inject its own panels
+- **Calm mode** — one switch kills all motion and auto-cruise; backlog items can be archived without touching source files
 - **A material panel** — Original / Cyan / Klein / Chrome presets, custom colors A·B·C, base opacity, flow speed, fluid strength, and mouse turbulence, all persisted in your browser
 
 ### Use it without the skill
