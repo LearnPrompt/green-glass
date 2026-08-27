@@ -250,11 +250,42 @@ window.WORKBENCH = {
   .live-tag.on  { background: hsla(var(--h),90%,41%,.13); color: var(--green-text); }
   .live-tag.off { background: rgba(255,180,87,.12); color: var(--amber); }
 
+  /* ======== 流体材质面板 ======== */
+  .mpanel { position: fixed; right: -340px; top: 16px; bottom: 16px; width: 312px; z-index: 60;
+    border-radius: 18px; background: linear-gradient(168deg, rgba(22,30,26,.94), rgba(8,12,10,.96));
+    border: 1px solid rgba(255,255,255,.1); backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%);
+    box-shadow: -34px 0 90px -40px rgba(0,0,0,.95); padding: 20px 18px 16px; overflow-y: auto;
+    transition: right .35s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; gap: 18px; }
+  .mpanel.open { right: 16px; }
+  .mpanel .mhd { display: flex; align-items: flex-start; justify-content: space-between; }
+  .mpanel .mhd .t1 { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .18em; color: var(--green-text); text-transform: uppercase; }
+  .mpanel .mhd .t2 { font-size: 16px; font-weight: 700; color: var(--fg-strong); margin-top: 7px; }
+  .mclose { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--fg-3); }
+  .mclose:hover { background: rgba(255,255,255,.06); color: var(--fg); }
+  .msec .lbl { font-size: 11px; color: var(--fg-3); margin-bottom: 10px; }
+  .presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .preset { cursor: pointer; text-align: center; }
+  .preset .pv { height: 44px; border-radius: 10px; border: 2px solid transparent; }
+  .preset.on .pv { border-color: rgba(255,255,255,.85); }
+  .preset .pn { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--fg-3); margin-top: 6px; }
+  .ccolors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .ccolor .cl { font-size: 10.5px; color: var(--fg-3); margin-bottom: 7px; }
+  .ccolor input[type=color] { width: 100%; height: 34px; border: 1px solid rgba(255,255,255,.14); border-radius: 9px; background: none; padding: 2px; cursor: pointer; }
+  .ccolor .hx { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--fg-4); margin-top: 5px; }
+  .mslider { margin-top: 4px; }
+  .mslider .sl { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--fg-2); }
+  .mslider .sl .mono { font-size: 10px; color: var(--green-text); }
+  .mslider input[type=range] { width: 100%; margin-top: 7px; accent-color: var(--green); }
+  .mbtns { display: flex; gap: 9px; margin-top: auto; padding-top: 6px; }
+  .mbtns .dbtn { padding: 10px; font-size: 12px; }
+  .mdiv { height: 1px; background: rgba(255,255,255,.07); }
+
   @media (max-width: 1180px) { .grid { grid-template-columns: 240px minmax(0,1fr); } .panel.dpanel { display: none; } }
   @media (max-width: 920px)  { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); } .grid { grid-template-columns: minmax(0,1fr); } .panel.qpanel { display: none; } .rail { display: none; } .search { margin-left: 0; } body { overflow: auto; } .app { height: auto; } }
 </style>
 </head>
 <body>
+<div class="mpanel" id="mpanel"></div>
 <div class="app">
   <div class="rail">
     <div class="brand" id="brand"></div>
@@ -285,19 +316,56 @@ window.WORKBENCH = {
     [[-58,.9,.30],[-92,.95,.26],[-24,.85,.22]],
     [[-104,.95,.29],[-122,1,.25],[-80,.9,.23]]
   ];
+
+  /* ---- 流体材质系统（对应参考视频的调色面板） ---- */
+  var MAT_PRESETS = {
+    original: { name: "Original", A: "#0ac98c", B: "#2bd46a", C: "#0a3f2e" },
+    cyan:     { name: "Cyan",     A: "#00c8e0", B: "#0a86ff", C: "#083344" },
+    klein:    { name: "Klein",    A: "#2f5cff", B: "#8a3ff2", C: "#0a1440" },
+    chrome:   { name: "Chrome",   A: "#e8eef0", B: "#9ca8ad", C: "#14181a" }
+  };
+  var MAT_DEFAULT = { preset: "original", A: "#0ac98c", B: "#2bd46a", C: "#0a3f2e",
+                      opacity: 88, speed: 100, strength: 100, mouse: 60 };
+  var MAT = (function () {
+    try { return Object.assign({}, MAT_DEFAULT, JSON.parse(localStorage.getItem("gg-material") || "{}")); }
+    catch (e) { return Object.assign({}, MAT_DEFAULT); }
+  })();
+  function saveMat() { localStorage.setItem("gg-material", JSON.stringify(MAT)); }
+  function hexToHsl(hex) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(hex);
+    if (!m) return { h: 161, s: 90, l: 41 };
+    var n = parseInt(m[1], 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, hh = 0, ss = 0, ll = (mx + mn) / 2;
+    if (d) {
+      ss = ll > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+      hh = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      hh *= 60;
+    }
+    return { h: hh, s: ss * 100, l: ll * 100 };
+  }
   var BLOBS = [
     ["left:2%;top:16%;width:48%;height:56%","left:48%;top:-4%;width:44%;height:62%","left:26%;top:48%;width:52%;height:52%"],
     ["left:8%;top:8%;width:46%;height:58%","left:44%;top:22%;width:50%;height:56%","left:-2%;top:46%;width:54%;height:50%"],
     ["left:4%;top:20%;width:50%;height:54%","left:46%;top:0%;width:46%;height:60%","left:28%;top:46%;width:50%;height:52%"],
     ["left:6%;top:12%;width:48%;height:58%","left:46%;top:26%;width:46%;height:54%","left:24%;top:50%;width:52%;height:50%"]
   ];
-  function meshColor(spec) {
-    var hh = ((h + spec[0]) % 360 + 360) % 360;
-    return "hsla(" + hh + "," + Math.max(12, Math.min(95, 90 * spec[1])) + "%," + (spec[2] * 100) + "%,.95)";
+  function meshColor(spec, j) {
+    var base = hexToHsl(MAT["ABC"[j]]);
+    var hh = ((base.h + spec[0]) % 360 + 360) % 360;
+    var ss = Math.max(4, Math.min(95, base.s * spec[1]));
+    var ll = Math.max(8, Math.min(74, base.l * (spec[2] / 0.31)));
+    return "hsla(" + hh.toFixed(0) + "," + ss.toFixed(0) + "%," + ll.toFixed(0) + "%,.95)";
   }
+  var FLUID_DUR = [22, 27, 19];
   function statCard(s, i) {
-    var blobs = BLOBS[i % 4].map(function (pos, j) { return '<i style="' + pos + ';background:' + meshColor(MESH[i % 4][j]) + '"></i>'; }).join("");
-    return '<div class="fcard"><div class="fluid">' + blobs + '</div><div class="shade"></div><div class="sheen"></div>' +
+    var spd = Math.max(MAT.speed, 10) / 100;
+    var k = MAT.strength / 100;
+    var blobs = BLOBS[i % 4].map(function (pos, j) {
+      return '<i style="' + pos + ';background:' + meshColor(MESH[i % 4][j], j) +
+        ';animation-duration:' + (FLUID_DUR[j] / spd).toFixed(1) + 's"></i>';
+    }).join("");
+    var flStyle = "opacity:" + (0.25 + 0.72 * MAT.opacity / 100).toFixed(2) + ";filter:blur(" + (30 * (0.6 + 0.7 * k)).toFixed(0) + "px)";
+    return '<div class="fcard"><div class="fluid" style="' + flStyle + '">' + blobs + '</div><div class="shade"></div><div class="sheen"></div>' +
       '<div class="body"><div class="cap">' + esc(s.cap) + '</div><div class="name">' + esc(s.name) + '</div>' +
       '<div class="val"><b>' + esc(s.value) + '</b><span>' + esc(s.unit) + '</span></div>' +
       '<div class="note">' + esc(s.note) + ' <b class="tone-' + s.tone + '">' + esc(s.delta) + '</b></div></div></div>';
@@ -385,7 +453,7 @@ window.WORKBENCH = {
       '<div class="stats">' + W.stats.map(statCard).join("") + '</div>' +
       '<div class="grid">' + queuePanelHTML("qpanel") +
       '<div class="panel stage-wrap">' +
-        '<div class="toolbar"><span class="tb on">3D 环境</span><span class="tb" id="spin">自动巡航</span><span class="tb" id="resetV">复位视角</span>' +
+        '<div class="toolbar"><span class="tb on">3D 环境</span><span class="tb" id="matBtn">流体材质</span><span class="tb" id="resetV">复位视角</span>' +
         '<span class="tb mono" style="margin-left:auto">' + (LIVE ? "生成 " + esc(LIVE.generated) : "示意") + '</span></div>' +
         '<div class="stage"><div class="glowbg"></div>' +
           '<div class="prog"><div class="t">' + esc(W.progress.label) + '</div><div class="v">' + W.progress.value + '%</div>' +
@@ -445,6 +513,8 @@ window.WORKBENCH = {
         }).join("") + '</div>' +
         '<input type="range" id="hue" min="0" max="359" value="' + h + '">' +
         '<div class="mono" style="margin-top:8px;font-size:11px;color:var(--fg-3)">accentH = <span id="hval">' + h + '</span></div></div>' +
+      '<div class="setcard"><b>流体材质</b><div class="note">四张统计卡的玻璃材质：配色预设、自定义三色、底色不透明度、流动速度、流体强度、鼠标扰动。</div>' +
+        '<div class="dbtn solid" id="matBtn" style="margin-top:12px;max-width:180px">打开调色面板</div></div>' +
       '<div class="setcard"><b>数据来源</b><div class="note" style="display:flex;align-items:center;gap:10px">当前 ' +
         (LIVE ? '<span class="live-tag on">● 本机实时数据 · 生成于 ' + esc(LIVE.generated) + '</span>' : '<span class="live-tag off">◌ 示意数据</span>') +
         '</div><div class="note">刷新数据（扫 git 仓库 + Obsidian 待办，生成 workbench-data.js 放本文件旁）：</div>' +
@@ -488,6 +558,10 @@ window.WORKBENCH = {
     var main = document.getElementById("main");
     main.innerHTML = VIEWS[current].render(filter);
     bindQueue(main);
+    var st = main.querySelector(".stats");
+    if (st) bindMouse(st);
+    var mb = document.getElementById("matBtn");
+    if (mb) mb.addEventListener("click", toggblePanel);
     var tl = document.getElementById("tlDays");
     if (tl) {
       var html = "", today = d.getDate(), last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
@@ -537,6 +611,91 @@ window.WORKBENCH = {
     }
   }
 
+  /* ---- 材质面板 ---- */
+  function presetPv(pr) {
+    return "background:radial-gradient(70% 90% at 22% 25%," + pr.A + " 0%,transparent 62%)," +
+           "radial-gradient(70% 90% at 78% 40%," + pr.B + " 0%,transparent 64%)," +
+           "radial-gradient(90% 90% at 50% 95%," + pr.C + " 0%,transparent 72%),#080b0a";
+  }
+  function slider(id, label, val, min, max, unit) {
+    return '<div class="mslider"><div class="sl"><span>' + label + '</span><span class="mono" id="' + id + 'v">' + val + unit + '</span></div>' +
+      '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" value="' + val + '"></div>';
+  }
+  function buildPanel() {
+    var el = document.getElementById("mpanel");
+    el.innerHTML =
+      '<div class="mhd"><div><div class="t1">Glass Material</div><div class="t2">四张流体卡片设置</div></div>' +
+      '<span class="mclose" id="mclose"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span></div>' +
+      '<div class="msec"><div class="lbl">配色预设</div><div class="presets">' +
+        Object.keys(MAT_PRESETS).map(function (k) {
+          var pr = MAT_PRESETS[k];
+          return '<div class="preset' + (MAT.preset === k ? " on" : "") + '" data-p="' + k + '">' +
+            '<div class="pv" style="' + presetPv(pr) + '"></div><div class="pn">' + pr.name + '</div></div>';
+        }).join("") + '</div></div>' +
+      '<div class="msec"><div class="lbl">自定义颜色</div><div class="ccolors">' +
+        [["A", "主色 A"], ["B", "辅色 B"], ["C", "阴影 C"]].map(function (c) {
+          return '<div class="ccolor"><div class="cl">' + c[1] + '</div>' +
+            '<input type="color" id="mc' + c[0] + '" value="' + MAT[c[0]] + '">' +
+            '<div class="hx" id="mch' + c[0] + '">' + MAT[c[0]] + '</div></div>';
+        }).join("") + '</div></div>' +
+      '<div class="mdiv"></div>' +
+      '<div class="msec"><div class="lbl">卡片底材</div>' + slider("mop", "底色不透明度", MAT.opacity, 20, 100, "%") + '</div>' +
+      '<div class="msec"><div class="lbl">动态参数</div>' +
+        slider("mspd", "流动速度", MAT.speed, 25, 300, "%") +
+        slider("mstr", "流体强度", MAT.strength, 30, 160, "%") +
+        slider("mmou", "鼠标扰动", MAT.mouse, 0, 100, "%") + '</div>' +
+      '<div class="mbtns"><div class="dbtn ghost" id="mreset">恢复默认</div><div class="dbtn solid" id="msave">保存设置</div></div>';
+
+    el.querySelector("#mclose").addEventListener("click", function () { el.classList.remove("open"); });
+    el.querySelectorAll(".preset").forEach(function (pe) {
+      pe.addEventListener("click", function () {
+        var pr = MAT_PRESETS[pe.dataset.p];
+        MAT.preset = pe.dataset.p; MAT.A = pr.A; MAT.B = pr.B; MAT.C = pr.C;
+        saveMat(); buildPanel(); el.classList.add("open"); applyMaterial();
+      });
+    });
+    ["A", "B", "C"].forEach(function (c) {
+      el.querySelector("#mc" + c).addEventListener("input", function (e) {
+        MAT[c] = e.target.value; MAT.preset = "";
+        el.querySelector("#mch" + c).textContent = e.target.value;
+        el.querySelectorAll(".preset").forEach(function (x) { x.classList.remove("on"); });
+        saveMat(); applyMaterial();
+      });
+    });
+    [["mop", "opacity", "%"], ["mspd", "speed", "%"], ["mstr", "strength", "%"], ["mmou", "mouse", "%"]].forEach(function (cfg) {
+      el.querySelector("#" + cfg[0]).addEventListener("input", function (e) {
+        MAT[cfg[1]] = +e.target.value;
+        el.querySelector("#" + cfg[0] + "v").textContent = e.target.value + cfg[2];
+        saveMat(); applyMaterial();
+      });
+    });
+    el.querySelector("#mreset").addEventListener("click", function () {
+      MAT = Object.assign({}, MAT_DEFAULT); saveMat(); buildPanel(); el.classList.add("open"); applyMaterial();
+    });
+    el.querySelector("#msave").addEventListener("click", function () { saveMat(); el.classList.remove("open"); });
+  }
+  function applyMaterial() {
+    var st = document.querySelector(".stats");
+    if (st) { st.innerHTML = W.stats.map(statCard).join(""); bindMouse(st); }
+  }
+  function bindMouse(st) {
+    st.querySelectorAll(".fcard").forEach(function (card) {
+      var fl = card.querySelector(".fluid");
+      card.addEventListener("mousemove", function (e) {
+        if (!MAT.mouse) return;
+        var r = card.getBoundingClientRect();
+        var dx = ((e.clientX - r.left) / r.width - 0.5) * 2, dy = ((e.clientY - r.top) / r.height - 0.5) * 2;
+        var amp = 26 * MAT.mouse / 100;
+        fl.style.transform = "translate(" + (dx * amp).toFixed(1) + "px," + (dy * amp).toFixed(1) + "px)";
+      });
+      card.addEventListener("mouseleave", function () { fl.style.transform = ""; });
+    });
+  }
+  function toggblePanel() {
+    var el = document.getElementById("mpanel");
+    el.classList.toggle("open");
+  }
+
   document.addEventListener("keydown", function (e) {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
       e.preventDefault();
@@ -545,6 +704,7 @@ window.WORKBENCH = {
     }
   });
 
+  buildPanel();
   render();
 })();
 </script>
