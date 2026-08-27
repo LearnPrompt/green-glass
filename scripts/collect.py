@@ -7,6 +7,7 @@
   python3 collect.py --projects ~/projects --vault ~/path/to/vault --out ~/Downloads
 """
 import argparse, json, os, re, subprocess, sys, time
+from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -30,10 +31,17 @@ def scan_git(root: Path, limit=14):
         dirty = len([l for l in sh(["git", "-C", str(d), "status", "--porcelain"]).splitlines() if l.strip()])
         subject = sh(["git", "-C", str(d), "log", "-1", "--format=%s"])[:40]
         today = sh(["git", "-C", str(d), "log", "--since=midnight", "--oneline"])
+        remote = sh(["git", "-C", str(d), "remote", "get-url", "origin"])
+        if remote.startswith("git@"):
+            remote = "https://" + remote[4:].replace(":", "/", 1)
+        remote = re.sub(r"\.git$", "", remote) if remote.startswith("https://") else ""
+        month0 = datetime.now().replace(day=1).strftime("%Y-%m-%d")
+        days = sh(["git", "-C", str(d), "log", "--since", month0, "--date=short", "--format=%ad"])
         repos.append({
             "name": d.name, "branch": branch, "dirty": dirty,
-            "last": int(ct), "subject": subject,
+            "last": int(ct), "subject": subject, "path": str(d), "remote": remote,
             "commitsToday": len(today.splitlines()) if today else 0,
+            "days": days.splitlines() if days else [],
         })
     repos.sort(key=lambda r: r["last"], reverse=True)
     return repos[:limit]
@@ -82,11 +90,12 @@ def scan_vault(vault: Path, max_tasks=6, max_backlog=5, max_files=500):
                 continue
             age = int((now - mt) / 86400)
             src = p.stem[:12]
+            relf = str(p.relative_to(vault))
             if age >= 7 and len(backlog) < max_backlog:
-                backlog.append({"text": body, "days": age, "src": src})
+                backlog.append({"text": body, "days": age, "src": src, "file": relf})
             elif age < 7 and len(todos) < max_tasks:
                 todos.append({"text": body, "badge": "待办", "tone": "todo",
-                              "time": datetime.fromtimestamp(mt).strftime("%m-%d"), "src": src})
+                              "time": datetime.fromtimestamp(mt).strftime("%m-%d"), "src": src, "file": relf})
     return todos, backlog, done_today
 
 def main():
@@ -129,15 +138,27 @@ def main():
     projects = [{
         "name": r["name"], "branch": r["branch"], "dirty": r["dirty"],
         "when": rel(r["last"]), "note": r["subject"], "status": status(r),
+        "path": r["path"], "remote": r["remote"],
     } for r in repos]
 
     ring = [{"id": f"RP · {i+1:02d}", "name": r["name"], "branch": r["branch"],
-             "dirty": r["dirty"], "status": status(r), "note": r["subject"], "when": rel(r["last"])}
+             "dirty": r["dirty"], "status": status(r), "note": r["subject"], "when": rel(r["last"]),
+             "path": r["path"], "remote": r["remote"]}
             for i, r in enumerate(repos[:5])]
 
     top = repos[0] if repos else None
+    daily = Counter()
+    for r in repos:
+        daily.update(r["days"])
+    refresh_cmd = "python3 " + os.path.abspath(__file__) + " --projects " + a.projects + \
+        (" --vault " + a.vault if a.vault else "") + \
+        (" --todo-file " + a.todo_file if a.todo_file else "") + " --out " + a.out
     data = {
         "generated": datetime.now().strftime("%m-%d %H:%M"),
+        "generatedEpoch": int(time.time()),
+        "vaultName": Path(a.vault).expanduser().resolve().name if a.vault else "",
+        "dailyCommits": dict(daily),
+        "refreshCmd": refresh_cmd,
         "stats": [
             {"cap": "Today / 今日提交", "name": "跨仓库提交", "value": str(commits_today), "unit": "个",
              "note": "已完成待办", "delta": f"✓ {done_today}", "tone": "up"},

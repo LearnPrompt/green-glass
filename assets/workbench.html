@@ -68,7 +68,8 @@ window.WORKBENCH = {
       "积压 4 项超两周，建议今天清掉两个"
     ]
   },
-  quota: { value: 62, reset: "08-31 重置" }
+  quota: { value: 62, reset: "08-31 重置" },
+  dailyCommits: null
 };
 </script>
 <script src="./workbench-data.js"></script>
@@ -155,7 +156,9 @@ window.WORKBENCH = {
   .cb { width: 17px; height: 17px; border-radius: 6px; border: 1.4px solid rgba(150,255,210,.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .qrow.done .cb { background: var(--green); border-color: var(--green); }
   .badge { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; padding: 2.5px 6px; border-radius: 5px; margin-left: auto; white-space: nowrap; flex-shrink: 0; }
-  .qrow .txt { min-width: 0; }
+  .qrow .txt { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .qrow > span:first-child + span:not(.txt) { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .qpanel .qrow .t, .qpanel .qrow > .mono[style] { display: none; }
   .qrow > .mono { max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
   .badge.todo { background: hsla(var(--h),90%,41%,.13); color: var(--green-text); }
   .badge.run  { background: rgba(255,180,87,.14); color: var(--amber); }
@@ -301,12 +304,35 @@ window.WORKBENCH = {
   .mbtns .dbtn { padding: 10px; font-size: 12px; }
   .mdiv { height: 1px; background: rgba(255,255,255,.07); }
 
+  /* ======== 横幅 / 出口 / 热力条 ======== */
+  .banner { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-radius: 12px; font-size: 12.5px; }
+  .banner.amber { background: rgba(255,180,87,.1); border: 1px solid rgba(255,180,87,.25); color: #ffcf94; }
+  .banner.intro { background: hsla(var(--h),90%,41%,.08); border: 1px solid hsla(var(--h),90%,41%,.22); color: var(--fg-2); }
+  .banner .bact { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+  .banner .bbtn { padding: 6px 13px; border-radius: 999px; font-size: 11.5px; cursor: pointer; background: rgba(255,255,255,.07); color: var(--fg); white-space: nowrap; }
+  .banner .bbtn:hover { background: rgba(255,255,255,.12); }
+  .banner .bx { cursor: pointer; color: var(--fg-4); padding: 4px; }
+  .jump { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; color: var(--fg-4); flex-shrink: 0; cursor: pointer; }
+  .jump:hover { background: rgba(255,255,255,.08); color: var(--green-text); }
+  .localtag { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; padding: 2px 5px; border-radius: 4px; background: rgba(255,255,255,.06); color: var(--fg-4); flex-shrink: 0; }
+  .heat { display: flex; align-items: flex-end; gap: 3px; height: 26px; margin-top: 10px; }
+  .heat i { flex: 1; min-width: 0; border-radius: 2.5px; background: rgba(255,255,255,.08); position: relative; }
+  .heat i.hit { background: hsla(var(--h),85%,45%,.75); }
+  .heat i.today { outline: 1.4px solid hsl(var(--h),90%,55%); outline-offset: 1px; }
+  .heat-lbl { display: flex; justify-content: space-between; margin-top: 6px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--fg-4); }
+  .rcard.focus .openhint { position: absolute; right: 12px; top: 13px; color: rgba(255,255,255,.85); }
+  .pcard.linked { cursor: pointer; }
+  .pcard.linked:hover { border-color: hsla(var(--h),90%,41%,.3); }
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 80; padding: 10px 18px; border-radius: 999px; background: rgba(16,24,20,.95); border: 1px solid hsla(var(--h),90%,41%,.3); color: var(--fg); font-size: 12.5px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
   @media (max-width: 1180px) { .grid { grid-template-columns: 240px minmax(0,1fr); } .panel.dpanel { display: none; } }
   @media (max-width: 920px)  { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); } .grid { grid-template-columns: minmax(0,1fr); } .panel.qpanel { display: none; } .rail { display: none; } .search { margin-left: 0; } body { overflow: auto; } .app { height: auto; } }
 </style>
 </head>
 <body>
 <div class="mpanel" id="mpanel"></div>
+<div class="toast" id="toast"></div>
 <div class="app">
   <div class="rail">
     <div class="brand" id="brand"></div>
@@ -330,6 +356,69 @@ window.WORKBENCH = {
   document.title = "绿透 · " + W.title;
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  ["dailyCommits", "generatedEpoch", "vaultName", "refreshCmd"].forEach(function (k) {
+    if (LIVE && LIVE[k] != null) W[k] = LIVE[k];
+  });
+
+  /* ---- 出口系统 ---- */
+  var OPENERS = { warp: "Warp 终端", vscode: "VS Code", cursor: "Cursor" };
+  var opener = localStorage.getItem("gg-opener") || "warp";
+  function repoUrl(path) {
+    if (!path) return "";
+    if (opener === "vscode") return "vscode://file" + path;
+    if (opener === "cursor") return "cursor://file" + path;
+    return "warp://action/new_tab?path=" + encodeURIComponent(path);
+  }
+  function openRepo(path) { if (path) location.href = repoUrl(path); }
+  function obsUrl(file) {
+    if (!file || !W.vaultName) return "";
+    return "obsidian://open?vault=" + encodeURIComponent(W.vaultName) + "&file=" + encodeURIComponent(file.replace(/\.md$/, ""));
+  }
+  var toastTimer = null;
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2600);
+  }
+  function copyRefreshCmd() {
+    var cmd = W.refreshCmd || "python3 collect.py --projects ~/projects --vault ~/你的vault --out 页面所在目录";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(cmd).then(function () { toast("刷新命令已复制，去终端跑一下"); },
+        function () { toast(cmd); });
+    } else { toast(cmd); }
+  }
+
+  /* ---- 数据保鲜 ---- */
+  function dataAgeHours() {
+    if (!LIVE || !W.generatedEpoch) return 0;
+    return (Date.now() / 1000 - W.generatedEpoch) / 3600;
+  }
+  function bannersHTML() {
+    var out = "";
+    var age = dataAgeHours();
+    if (age > 12) {
+      out += '<div class="banner amber"><span>数据已 ' + Math.floor(age) + ' 小时未刷新，下面的数字可能过期了</span>' +
+        '<span class="bact"><span class="bbtn" data-act="copycmd">复制刷新命令</span></span></div>';
+    }
+    if (!LIVE && !localStorage.getItem("gg-intro-off")) {
+      out += '<div class="banner intro"><span>正在看示意数据。一条命令即可接入你自己的 git 仓库和 Obsidian 待办</span>' +
+        '<span class="bact"><span class="bbtn" data-act="gosettings">怎么接入</span><span class="bx" data-act="introoff">✕</span></span></div>';
+    }
+    return out;
+  }
+  setInterval(function () {
+    if (!LIVE) return;
+    var sc = document.createElement("script");
+    sc.src = "./workbench-data.js?" + Date.now();
+    sc.onload = function () {
+      if (window.WORKBENCH_LIVE && window.WORKBENCH_LIVE.generatedEpoch &&
+          window.WORKBENCH_LIVE.generatedEpoch > (LIVE.generatedEpoch || 0)) location.reload();
+      sc.remove();
+    };
+    sc.onerror = function () { sc.remove(); };
+    document.head.appendChild(sc);
+  }, 300000);
 
   var MESH = [
     [[0,1,.31],[16,.8,.22],[-22,.9,.27]],
@@ -395,20 +484,32 @@ window.WORKBENCH = {
   /* ---- 队列行（可勾选，仅本机记忆） ---- */
   var doneSet = {};
   try { doneSet = JSON.parse(localStorage.getItem("gg-done") || "{}"); } catch (e) {}
+  function jumpIcon(file) {
+    var u = obsUrl(file);
+    if (!u) return "";
+    return '<span class="jump" data-obs="' + esc(u) + '" title="在 Obsidian 打开源文件">' +
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg></span>';
+  }
   function qrow(t) {
     var done = !!doneSet[t.text];
     return '<div class="qrow' + (done ? " done" : "") + '" data-t="' + esc(t.text) + '">' +
       '<span class="cb">' + (done ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#04150d" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 7.2"/></svg>' : "") + '</span>' +
       '<span class="txt">' + esc(t.text) + '</span>' +
+      (done ? '<span class="localtag" title="只记在本机浏览器，vault 源文件未改">仅本机</span>' : "") +
       (t.src ? '<span class="mono" style="color:var(--fg-4)">' + esc(t.src) + '</span>' : "") +
+      jumpIcon(t.file) +
       '<span class="badge ' + (t.tone || "todo") + '">' + esc(t.badge || "待办") + '</span>' +
-      '<span class="mono">' + esc(t.time || "") + '</span></div>';
+      '<span class="mono t">' + esc(t.time || "") + '</span></div>';
   }
   function brow(t) {
-    return '<div class="qrow"><span>' + esc(t.text) + '</span>' +
-      (t.src ? '<span class="mono days" style="color:var(--fg-4)">' + esc(t.src) + '</span><span class="mono">积压 ' + t.days + ' 天</span>' : '<span class="mono days">积压 ' + t.days + ' 天</span>') + '</div>';
+    return '<div class="qrow"><span class="txt">' + esc(t.text) + '</span>' +
+      (t.src ? '<span class="mono days" style="color:var(--fg-4)">' + esc(t.src) + '</span>' : "") + jumpIcon(t.file) +
+      '<span class="mono"' + (t.src ? "" : ' class="days"') + '>积压 ' + t.days + ' 天</span></div>';
   }
   function bindQueue(root) {
+    root.querySelectorAll(".jump[data-obs]").forEach(function (el) {
+      el.addEventListener("click", function (e) { e.stopPropagation(); location.href = el.dataset.obs; });
+    });
     root.querySelectorAll(".qrow[data-t]").forEach(function (el) {
       el.addEventListener("click", function () {
         var k = el.dataset.t;
@@ -442,6 +543,7 @@ window.WORKBENCH = {
       (r.status ? '<span class="st"><i></i>' + esc(r.status) + '</span>' : "") +
       (r.note ? '<div class="note2">' + esc(r.note) + '</div>' : "") +
       (r.when ? '<div class="when2">' + esc(r.when) + '</div>' : "") +
+      (r.path ? '<span class="openhint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg></span>' : "") +
       '</div>';
   }
   var focus = Math.min(W.ringFocus || 0, Math.max(W.ring.length - 1, 0));
@@ -483,6 +585,7 @@ window.WORKBENCH = {
       if (!card) return;
       var i = +card.dataset.i;
       if (i !== focus) { focus = i; updateRing(); }
+      else if (W.ring[i] && W.ring[i].path) { openRepo(W.ring[i].path); }
       holdCruise();
     });
     updateRing();
@@ -509,8 +612,19 @@ window.WORKBENCH = {
       '<div class="advice"><b>调度建议</b>' + ((W.detail && W.detail.advice) || []).map(function (a) { return '<div class="li">' + esc(a) + '</div>'; }).join("") + '</div>';
   }
   function syncDetail() {
+    var r = W.ring[focus];
     var box = document.getElementById("detailBox");
-    if (box && W.ring[focus]) box.innerHTML = detailHTML(W.ring[focus]);
+    if (box && r) box.innerHTML = detailHTML(r);
+    var btns = document.getElementById("dbtns");
+    if (btns && r) {
+      var html = "";
+      if (r.path) html += '<div class="dbtn ghost" data-open="' + esc(r.path) + '">在终端打开</div>';
+      if (r.remote) html += '<a class="dbtn solid" style="text-decoration:none" href="' + esc(r.remote) + '" target="_blank" rel="noopener">GitHub ↗</a>';
+      btns.innerHTML = html;
+      btns.querySelectorAll("[data-open]").forEach(function (el) {
+        el.addEventListener("click", function () { openRepo(el.dataset.open); });
+      });
+    }
   }
   function drow(r) {
     var v = esc(r[1])
@@ -527,7 +641,7 @@ window.WORKBENCH = {
     return '<div class="top"><div><h1>' + esc(title) + '</h1><div class="sub">' + esc(sub) + '</div></div>' +
       '<label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(232,239,235,.4)" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.6"/><path d="m16 16 4.2 4.2"/></svg>' +
       '<input id="q" placeholder="搜索项目、任务…"><span class="mono" style="font-size:10px;color:var(--fg-4)">⌘K</span></label>' +
-      '<div class="cta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></svg>立即调度</div></div>';
+      '<div class="cta" data-act="copycmd"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5A8.1 8.1 0 1 0 18.6 16"/><path d="M20 5v6.5h-6.5"/></svg>刷新数据</div></div>';
   }
 
   /* ================= 视图 ================= */
@@ -535,6 +649,7 @@ window.WORKBENCH = {
   function viewOverview() {
     var det = W.detail;
     var html = topbar(W.title, dateStr + " · " + W.subtitle) +
+      bannersHTML() +
       '<div class="stats">' + W.stats.map(statCard).join("") + '</div>' +
       '<div class="grid">' + queuePanelHTML("qpanel") +
       '<div class="panel stage-wrap">' +
@@ -546,15 +661,14 @@ window.WORKBENCH = {
           '<div class="ring" id="ring"></div>' +
           '<div class="hint">自动巡航中 · 点击卡片聚焦 <b id="hintName">' + esc((W.ring[focus] || {}).name || "") + '</b></div>' +
         '</div>' +
-        '<div class="timeline"><div class="row1"><b>推进时间轴</b><span class="mono" style="font-size:10.5px;color:var(--fg-4)">' + d.getFullYear() + ' 年 ' + (d.getMonth()+1) + ' 月</span>' +
-        '<span class="tb on mono" style="margin-left:auto;padding:4px 10px">今天</span></div>' +
-        '<div class="tl-days" id="tlDays"></div>' +
-        '<div class="bar"><i style="width:' + Math.round(d.getDate() / 31 * 100) + '%"></i></div></div>' +
+        '<div class="timeline"><div class="row1"><b>本月提交</b><span class="mono" style="font-size:10.5px;color:var(--fg-4)">' + d.getFullYear() + ' 年 ' + (d.getMonth()+1) + ' 月 · 跨全部仓库</span>' +
+        '<span class="mono" style="margin-left:auto;font-size:10.5px;color:var(--green-text)" id="heatSum"></span></div>' +
+        '<div class="heat" id="heat"></div><div class="heat-lbl" id="heatLbl"></div></div>' +
       '</div>' +
       '<div class="panel dpanel detail">' +
         '<div class="dhd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green-hi)" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 13.9 9l5.6 1.9-5.6 1.9L12 18.5l-1.9-5.7L4.5 10.9 10.1 9z"/></svg>智能详情<span class="mono" style="margin-left:auto;font-size:9.5px;color:var(--fg-4)">跟随卡环</span></div>' +
         '<div id="detailBox" style="display:flex;flex-direction:column;min-height:0"></div>' +
-        '<div class="dbtns"><div class="dbtn ghost">打开仓库</div><div class="dbtn solid">标记已推进</div></div>' +
+        '<div class="dbtns" id="dbtns"></div>' +
       '</div></div>';
     return html;
   }
@@ -570,7 +684,7 @@ window.WORKBENCH = {
     return topbar("项目索引", (LIVE ? "扫描自本机 git 仓库 · 生成 " + LIVE.generated : "示意数据") + " · 共 " + list.length + " 个") +
       '<div class="pgrid">' + list.map(function (p) {
         var c = pStatColor(p.status);
-        return '<div class="pcard"><div class="r1">' +
+        return '<div class="pcard' + (p.path ? " linked" : "") + '"' + (p.path ? ' data-open="' + esc(p.path) + '" title="点击在' + OPENERS[opener] + '打开"' : "") + '><div class="r1">' +
           '<span class="pdot" style="background:' + c[2] + (p.status === "在跑" ? ";box-shadow:0 0 10px " + c[2] : "") + '"></span>' +
           '<b>' + esc(p.name) + '</b>' +
           '<span class="pstat" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(p.status) + '</span></div>' +
@@ -580,6 +694,11 @@ window.WORKBENCH = {
       }).join("") + '</div>';
   }
 
+  function bindProjectCards(main) {
+    main.querySelectorAll(".pcard[data-open]").forEach(function (el) {
+      el.addEventListener("click", function () { openRepo(el.dataset.open); });
+    });
+  }
   function viewQueue() {
     return topbar("今日队列", (LIVE ? "来自 vault 的勾选框 · 点行勾掉（只记在本机浏览器）" : "示意数据 · 点行勾掉")) +
       '<div style="max-width:720px">' + queuePanelHTML("") + '</div>';
@@ -595,6 +714,10 @@ window.WORKBENCH = {
         }).join("") + '</div>' +
         '<input type="range" id="hue" min="0" max="359" value="' + h + '">' +
         '<div class="mono" style="margin-top:8px;font-size:11px;color:var(--fg-3)">accentH = <span id="hval">' + h + '</span></div></div>' +
+      '<div class="setcard"><b>打开方式</b><div class="note">「在终端打开」和项目卡片点击用哪个应用接住。</div>' +
+        '<div class="swatches" style="gap:8px">' + Object.keys(OPENERS).map(function (k) {
+          return '<span class="bbtn" data-opener="' + k + '" style="border-radius:999px;padding:8px 16px;font-size:12px;cursor:pointer;background:' + (k === opener ? "var(--green-deep)" : "rgba(255,255,255,.07)") + ';border:1px solid ' + (k === opener ? "hsla(var(--h),90%,41%,.34)" : "transparent") + ';color:' + (k === opener ? "#f2fbf6" : "var(--fg-2)") + '">' + OPENERS[k] + '</span>';
+        }).join("") + '</div></div>' +
       '<div class="setcard"><b>流体材质</b><div class="note">四张统计卡的玻璃材质：配色预设、自定义三色、底色不透明度、流动速度、流体强度、鼠标扰动。</div>' +
         '<div class="dbtn solid" id="matBtn" style="margin-top:12px;max-width:180px">打开调色面板</div></div>' +
       '<div class="setcard"><b>数据来源</b><div class="note" style="display:flex;align-items:center;gap:10px">当前 ' +
@@ -640,20 +763,35 @@ window.WORKBENCH = {
     var main = document.getElementById("main");
     main.innerHTML = VIEWS[current].render(filter);
     bindQueue(main);
+    bindProjectCards(main);
     var st = main.querySelector(".stats");
     if (st) bindMouse(st);
     var mb = document.getElementById("matBtn");
     if (mb) mb.addEventListener("click", toggblePanel);
-    var tl = document.getElementById("tlDays");
-    if (tl) {
-      var html = "", today = d.getDate(), last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-      for (var i = -6; i <= 6; i++) {
-        var day = today + i;
-        if (day === today) html += '<span class="today">' + day + "</span>";
-        else if (day < 1 || day > last) html += '<span class="dim">' + ((day + last - 1) % last + 1) + "</span>";
-        else html += "<span>" + day + "</span>";
+    var heat = document.getElementById("heat");
+    if (heat) {
+      var today = d.getDate(), last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      var dc = W.dailyCommits;
+      if (!dc) { /* 示意数据：造一个有节奏的样本 */
+        dc = {};
+        for (var i2 = 1; i2 <= today; i2++) {
+          var v = (i2 * 7 + 3) % 5;
+          if (v) dc[d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(i2).padStart(2, "0")] = v;
+        }
       }
-      tl.innerHTML = html;
+      var mx = 1, total = 0, key;
+      for (key in dc) { if (dc[key] > mx) mx = dc[key]; total += dc[key]; }
+      var cells = "";
+      for (var day = 1; day <= last; day++) {
+        key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+        var c = dc[key] || 0;
+        var hpx = c ? Math.max(6, Math.round(6 + 20 * c / mx)) : 4;
+        cells += '<i class="' + (c ? "hit" : "") + (day === today ? " today" : "") + '" style="height:' + hpx + 'px" title="' + key + ' · ' + c + ' commits"></i>';
+      }
+      heat.innerHTML = cells;
+      document.getElementById("heatLbl").innerHTML = "<span>1</span><span>" + today + " 日 · 今天</span><span>" + last + "</span>";
+      var hs = document.getElementById("heatSum");
+      if (hs) hs.textContent = total + " commits";
     }
     stopCruise();
     buildRing();
@@ -780,6 +918,18 @@ window.WORKBENCH = {
     var el = document.getElementById("mpanel");
     el.classList.toggle("open");
   }
+
+  document.addEventListener("click", function (e) {
+    var act = e.target.closest("[data-act]");
+    if (act) {
+      if (act.dataset.act === "copycmd") copyRefreshCmd();
+      if (act.dataset.act === "gosettings") { current = "settings"; render(); }
+      if (act.dataset.act === "introoff") { localStorage.setItem("gg-intro-off", "1"); render(); }
+      return;
+    }
+    var op = e.target.closest("[data-opener]");
+    if (op) { opener = op.dataset.opener; localStorage.setItem("gg-opener", opener); render(); }
+  });
 
   document.addEventListener("keydown", function (e) {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
