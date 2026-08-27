@@ -154,7 +154,9 @@ window.WORKBENCH = {
   .qrow.done .txt { color: var(--fg-4); text-decoration: line-through; }
   .cb { width: 17px; height: 17px; border-radius: 6px; border: 1.4px solid rgba(150,255,210,.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .qrow.done .cb { background: var(--green); border-color: var(--green); }
-  .badge { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; padding: 2.5px 6px; border-radius: 5px; margin-left: auto; }
+  .badge { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; padding: 2.5px 6px; border-radius: 5px; margin-left: auto; white-space: nowrap; flex-shrink: 0; }
+  .qrow .txt { min-width: 0; }
+  .qrow > .mono { max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
   .badge.todo { background: hsla(var(--h),90%,41%,.13); color: var(--green-text); }
   .badge.run  { background: rgba(255,180,87,.14); color: var(--amber); }
   .days { margin-left: auto; }
@@ -379,11 +381,13 @@ window.WORKBENCH = {
     return '<div class="qrow' + (done ? " done" : "") + '" data-t="' + esc(t.text) + '">' +
       '<span class="cb">' + (done ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#04150d" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 7.2"/></svg>' : "") + '</span>' +
       '<span class="txt">' + esc(t.text) + '</span>' +
+      (t.src ? '<span class="mono" style="color:var(--fg-4)">' + esc(t.src) + '</span>' : "") +
       '<span class="badge ' + (t.tone || "todo") + '">' + esc(t.badge || "待办") + '</span>' +
       '<span class="mono">' + esc(t.time || "") + '</span></div>';
   }
   function brow(t) {
-    return '<div class="qrow"><span>' + esc(t.text) + '</span><span class="mono days">积压 ' + t.days + ' 天</span></div>';
+    return '<div class="qrow"><span>' + esc(t.text) + '</span>' +
+      (t.src ? '<span class="mono days" style="color:var(--fg-4)">' + esc(t.src) + '</span><span class="mono">积压 ' + t.days + ' 天</span>' : '<span class="mono days">积压 ' + t.days + ' 天</span>') + '</div>';
   }
   function bindQueue(root) {
     root.querySelectorAll(".qrow[data-t]").forEach(function (el) {

@@ -47,7 +47,7 @@ def scan_vault(vault: Path, max_tasks=6, max_backlog=5, max_files=500):
     now = time.time()
     today0 = datetime.now().replace(hour=0, minute=0, second=0).timestamp()
     md = []
-    skip = {".obsidian", ".git", ".trash", "55_附件", "50_资源"}
+    skip = {".obsidian", ".git", ".trash", "55_附件", "50_资源", "00_收件箱", "存档", "归档"}
     for p in vault.rglob("*.md"):
         if any(part in skip or part.startswith(".") for part in p.parts[len(vault.parts):]):
             continue
@@ -81,22 +81,37 @@ def scan_vault(vault: Path, max_tasks=6, max_backlog=5, max_files=500):
                     done_today += 1
                 continue
             age = int((now - mt) / 86400)
+            src = p.stem[:12]
             if age >= 7 and len(backlog) < max_backlog:
-                backlog.append({"text": body, "days": age})
+                backlog.append({"text": body, "days": age, "src": src})
             elif age < 7 and len(todos) < max_tasks:
                 todos.append({"text": body, "badge": "待办", "tone": "todo",
-                              "time": datetime.fromtimestamp(mt).strftime("%m-%d")})
+                              "time": datetime.fromtimestamp(mt).strftime("%m-%d"), "src": src})
     return todos, backlog, done_today
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--projects", required=True)
     ap.add_argument("--vault", default="")
+    ap.add_argument("--todo-file", default="", help="指定一个 md，其中未勾选项直接进今日队列")
     ap.add_argument("--out", default=".")
     a = ap.parse_args()
 
     repos = scan_git(Path(a.projects).expanduser())
     todos, backlog, done_today = scan_vault(Path(a.vault).expanduser() if a.vault else None)
+    if a.todo_file:
+        tf = Path(a.todo_file).expanduser()
+        if tf.is_file():
+            curated = []
+            for line in tf.read_text(encoding="utf-8", errors="ignore").splitlines():
+                m = TASK_RE.match(line)
+                if m and m.group(1) == " ":
+                    body = re.sub(r"[#*`\[\]]", "", m.group(2)).strip()[:24]
+                    if body:
+                        curated.append({"text": body, "badge": "待办", "tone": "todo",
+                                        "time": "", "src": tf.stem[:12]})
+            if curated:
+                todos = curated[:8]
 
     running = [r for r in repos if r["dirty"] > 0]
     stale = [r for r in repos if time.time() - r["last"] > 14 * 86400]
