@@ -131,8 +131,8 @@ def main():
         "when": rel(r["last"]), "note": r["subject"], "status": status(r),
     } for r in repos]
 
-    ring = [{"id": f"RP · {i+1:02d}", "name": r["name"],
-             "sub": f"{r['branch']}{' · +' + str(r['dirty']) if r['dirty'] else ''} · {status(r)}"}
+    ring = [{"id": f"RP · {i+1:02d}", "name": r["name"], "branch": r["branch"],
+             "dirty": r["dirty"], "status": status(r), "note": r["subject"], "when": rel(r["last"])}
             for i, r in enumerate(repos[:5])]
 
     top = repos[0] if repos else None

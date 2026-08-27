@@ -43,11 +43,11 @@ window.WORKBENCH = {
     { name: "humanize-ppt",  branch: "main",         dirty: 0, when: "2 个月前",  note: "v1.0.0 已发布",   status: "久置" }
   ],
   ring: [
-    { id: "RP · 04", name: "skill-sync",    sub: "干净 · 空闲" },
-    { id: "RP · 03", name: "ai-news-radar", sub: "feat/persona · 待复核" },
-    { id: "RP · 01", name: "goodcase.ai",   sub: "3 个未提交 · 在跑" },
-    { id: "RP · 02", name: "carlwow.com",   sub: "干净 · 已部署" },
-    { id: "RP · 05", name: "humanize-ppt",  sub: "v1.0.0 · 已发布" }
+    { id: "RP · 04", name: "skill-sync",    branch: "main",         dirty: 0, status: "干净",   note: "审计报告",      when: "3 天前" },
+    { id: "RP · 03", name: "ai-news-radar", branch: "feat/persona", dirty: 0, status: "待复核", note: "v0.7 Persona",  when: "2 小时前" },
+    { id: "RP · 01", name: "goodcase.ai",   branch: "main",         dirty: 3, status: "在跑",   note: "R2 迁移收尾",   when: "14 分钟前" },
+    { id: "RP · 02", name: "carlwow.com",   branch: "main",         dirty: 0, status: "干净",   note: "JD 细则待补",   when: "昨天" },
+    { id: "RP · 05", name: "humanize-ppt",  branch: "main",         dirty: 0, status: "久置",   note: "v1.0.0 已发布", when: "2 个月前" }
   ],
   ringFocus: 2,
   progress: { label: "本周推进", value: 74, sub: "12 项已闭环" },
@@ -174,25 +174,44 @@ window.WORKBENCH = {
   .prog .s { font-size: 9.5px; color: rgba(255,255,255,.5); margin-top: 3px; }
   .prog .bar { margin-top: 10px; background: rgba(255,255,255,.16); }
 
-  .ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); display: flex; align-items: center; perspective: 1000px; }
-  .rcard { border-radius: 11px; background: linear-gradient(160deg, #f2f6f3, #d6ddd8); box-shadow: 0 18px 34px -18px rgba(0,0,0,.9); padding: 10px 9px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
-  .rcard .rid { font-family: 'JetBrains Mono', monospace; font-size: 7px; color: rgba(20,32,26,.5); }
-  .rcard .ln { height: 1px; background: rgba(20,32,26,.14); }
-  .rcard .nm { margin-top: auto; font-size: 8px; font-weight: 700; color: rgba(20,32,26,.72); text-align: center; word-break: break-all; }
-  .rcard.p2 { width: 78px; height: 152px; z-index: 1; }
-  .rcard.p1 { width: 94px; height: 176px; z-index: 2; margin-left: -6px; }
-  .rcard.l2 { transform: rotateY(34deg) scale(.82); }
-  .rcard.l1 { transform: rotateY(24deg) scale(.93); }
-  .rcard.r1 { transform: rotateY(-24deg) scale(.93); }
-  .rcard.r2 { transform: rotateY(-34deg) scale(.82); }
-  .rcard.focus { width: 138px; height: 222px; z-index: 3; margin-left: -4px; margin-right: -4px; position: relative; overflow: hidden; border-radius: 14px; transform: none;
+  .ring { position: absolute; inset: 0; perspective: 1100px; }
+  .rcard { position: absolute; left: 50%; top: 50%; cursor: pointer; border-radius: 13px;
+    background: linear-gradient(160deg, #f2f6f3, #d3dbd6); box-shadow: 0 18px 34px -18px rgba(0,0,0,.9);
+    padding: 13px 14px; display: flex; flex-direction: column; overflow: hidden;
+    transition: transform .55s cubic-bezier(.4,0,.2,1), width .55s cubic-bezier(.4,0,.2,1), height .55s cubic-bezier(.4,0,.2,1), opacity .45s, box-shadow .55s;
+    will-change: transform; }
+  .rcard .rid { font-family: 'JetBrains Mono', monospace; font-size: 7.5px; color: rgba(20,32,26,.45); }
+  .rcard .nm { font-size: 12px; font-weight: 700; color: rgba(16,26,21,.88); margin-top: 8px; word-break: break-all; line-height: 1.3; }
+  .rcard .meta { display: flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: rgba(20,32,26,.55); margin-top: 6px; }
+  .rcard .meta svg { flex-shrink: 0; }
+  .rcard .note2 { font-size: 9px; line-height: 1.5; color: rgba(20,32,26,.5); margin-top: auto;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .rcard .when2 { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: rgba(20,32,26,.4); margin-top: 5px; }
+  .rcard .st { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+    font-family: 'JetBrains Mono', monospace; font-size: 8px; padding: 2.5px 7px; border-radius: 5px;
+    background: rgba(20,32,26,.08); color: rgba(20,32,26,.6); margin-top: 8px; }
+  .rcard .st i { width: 5px; height: 5px; border-radius: 99px; background: rgba(20,32,26,.35); }
+
+  .rcard.focus { width: 178px; height: 206px; z-index: 5; transform: translate(-50%, -50%); border-radius: 15px; padding: 15px 16px;
     background: linear-gradient(155deg, hsl(var(--h),75%,62%), hsl(var(--h),85%,36%));
-    box-shadow: 0 0 44px -6px hsla(var(--h),90%,45%,.55), 0 22px 44px -20px rgba(0,0,0,.95); padding: 13px 12px; }
-  .rcard.focus .rid { font-size: 8px; color: rgba(255,255,255,.72); }
-  .rcard.focus .ln { background: rgba(4,32,20,.5); opacity: .5; }
-  .rcard.focus .nm { font-size: 11.5px; color: #fff; }
-  .rcard.focus .sub { font-size: 9.5px; color: rgba(255,255,255,.75); text-align: center; margin-top: 4px; }
-  .rcard.focus .check { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; }
+    box-shadow: 0 0 44px -6px hsla(var(--h),90%,45%,.55), 0 22px 44px -20px rgba(0,0,0,.95); }
+  .rcard.focus .rid { font-size: 8.5px; color: rgba(255,255,255,.7); }
+  .rcard.focus .nm { font-size: 14.5px; color: #fff; margin-top: 9px; }
+  .rcard.focus .meta { font-size: 9.5px; color: rgba(255,255,255,.8); margin-top: 7px; }
+  .rcard.focus .note2 { font-size: 10px; color: rgba(255,255,255,.72); }
+  .rcard.focus .when2 { font-size: 8.5px; color: rgba(255,255,255,.55); }
+  .rcard.focus .st { background: rgba(4,32,20,.28); color: #eafff5; font-size: 8.5px; }
+  .rcard.focus .st i { background: #b8ffe0; box-shadow: 0 0 7px rgba(184,255,224,.9); }
+
+  .rcard.l1, .rcard.r1 { width: 138px; height: 168px; z-index: 4; }
+  .rcard.l1 { transform: translate(calc(-50% - 136px), -50%) rotateY(26deg) scale(.96); }
+  .rcard.r1 { transform: translate(calc(-50% + 136px), -50%) rotateY(-26deg) scale(.96); }
+  .rcard.l2, .rcard.r2 { width: 110px; height: 142px; z-index: 3; opacity: .88; }
+  .rcard.l2 { transform: translate(calc(-50% - 238px), -50%) rotateY(34deg) scale(.9); }
+  .rcard.r2 { transform: translate(calc(-50% + 238px), -50%) rotateY(-34deg) scale(.9); }
+  .rcard.l2 .note2, .rcard.r2 .note2, .rcard.l2 .when2, .rcard.r2 .when2 { display: none; }
+  .rcard.hidden2 { opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(.4); z-index: 1; }
+
   .hint { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: rgba(12,18,15,.75); border: 1px solid var(--line-2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font-size: 10.5px; color: rgba(232,239,235,.55); white-space: nowrap; }
   .hint b { color: var(--green-text); font-weight: 600; }
 
@@ -411,26 +430,88 @@ window.WORKBENCH = {
       '</div></div>';
   }
 
-  function ringCard(r, pos) {
-    if (pos === "focus") {
-      var lines = ""; for (var i = 0; i < 6; i++) lines += '<div class="ln" style="margin-top:7px"></div>';
-      return '<div class="rcard focus" data-i="' + r._i + '"><div class="rid">' + esc(r.id) + '</div>' + lines +
-        '<div class="check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 7.2"/></svg></div>' +
-        '<div class="nm">' + esc(r.name) + '</div><div class="sub">' + esc(r.sub) + '</div></div>';
-    }
-    var n = pos[1] === "2" ? 4 : 5, lns = "";
-    for (var j = 0; j < n; j++) lns += '<div class="ln"' + (j === 0 ? ' style="margin-top:3px"' : "") + '></div>';
-    return '<div class="rcard p' + pos[1] + " " + pos + '" data-i="' + r._i + '"><div class="rid">' + esc(r.id) + '</div>' + lns + '<div class="nm">' + esc(r.name) + '</div></div>';
+  var STATUS_STYLE = { "在跑": 1, "待复核": 1, "久置": 1 };
+  function ringCardHTML(r, i) {
+    var branch = r.branch != null ? r.branch : (r.sub || "");
+    var dirtyTxt = r.branch != null ? (r.dirty ? " · +" + r.dirty : " · 干净") : "";
+    return '<div class="rcard" data-i="' + i + '">' +
+      '<div class="rid">' + esc(r.id || "") + '</div>' +
+      '<div class="nm">' + esc(r.name) + '</div>' +
+      '<div class="meta"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="5" r="2.3"/><circle cx="6" cy="19" r="2.3"/><circle cx="18" cy="9" r="2.3"/><path d="M6 7.3v9.4"/><path d="M15.7 10.6a5.7 5.7 0 0 1-5.7 5.7H6"/></svg>' +
+      '<span>' + esc(branch + dirtyTxt) + '</span></div>' +
+      (r.status ? '<span class="st"><i></i>' + esc(r.status) + '</span>' : "") +
+      (r.note ? '<div class="note2">' + esc(r.note) + '</div>' : "") +
+      (r.when ? '<div class="when2">' + esc(r.when) + '</div>' : "") +
+      '</div>';
   }
   var focus = Math.min(W.ringFocus || 0, Math.max(W.ring.length - 1, 0));
-  function renderRing() {
-    if (!W.ring.length) return "";
-    var items = W.ring.map(function (r, i) { r._i = i; return r; });
-    var order = [], positions = ["l2", "l1", "focus", "r1", "r2"];
-    for (var k = -2; k <= 2; k++) order.push(items[((focus + k) % items.length + items.length) % items.length]);
-    return order.map(function (r, i) { return ringCard(r, positions[i]); }).join("");
+  var cruiseOn = true, cruiseTimer = null, cruiseHold = null;
+  function startCruise() {
+    stopCruise();
+    if (cruiseOn && W.ring.length > 1) {
+      cruiseTimer = setInterval(function () { focus = (focus + 1) % W.ring.length; updateRing(); }, 3800);
+    }
+    var sp = document.getElementById("spin");
+    if (sp) sp.classList.toggle("on", cruiseOn);
   }
-
+  function stopCruise() { if (cruiseTimer) { clearInterval(cruiseTimer); cruiseTimer = null; } }
+  function holdCruise() {
+    stopCruise();
+    if (cruiseHold) clearTimeout(cruiseHold);
+    cruiseHold = setTimeout(function () { if (cruiseOn) startCruise(); }, 9000);
+  }
+  function updateRing() {
+    var ring = document.getElementById("ring");
+    if (!ring) return;
+    var n = W.ring.length;
+    ring.querySelectorAll(".rcard").forEach(function (el) {
+      var i = +el.dataset.i, d = ((i - focus) % n + n) % n;
+      var cls = d === 0 ? "focus" : d === 1 ? "r1" : d === n - 1 ? "l1" :
+                (n >= 5 && d === 2) ? "r2" : (n >= 5 && d === n - 2) ? "l2" : "hidden2";
+      el.className = "rcard " + cls;
+    });
+    var hn = document.getElementById("hintName");
+    if (hn) hn.textContent = W.ring[focus] ? W.ring[focus].name : "";
+    syncDetail();
+  }
+  function buildRing() {
+    var ring = document.getElementById("ring");
+    if (!ring || !W.ring.length) return;
+    ring.innerHTML = W.ring.map(ringCardHTML).join("");
+    ring.addEventListener("click", function (e) {
+      var card = e.target.closest(".rcard");
+      if (!card) return;
+      var i = +card.dataset.i;
+      if (i !== focus) { focus = i; updateRing(); }
+      holdCruise();
+    });
+    updateRing();
+    startCruise();
+  }
+  function detailHTML(r) {
+    var pj = null;
+    (W.projects || []).forEach(function (p2) { if (p2.name === r.name) pj = p2; });
+    var branch = (pj && pj.branch) || r.branch || "";
+    var dirty = pj ? pj.dirty : r.dirty;
+    var status = (pj && pj.status) || r.status || "";
+    var note = (pj && pj.note) || r.note || "";
+    var when = (pj && pj.when) || r.when || "";
+    var isTop = W.detail && W.detail.name === r.name;
+    var rows = [
+      ["当前分支", branch + (dirty ? " · +" + dirty : "")],
+      ["最近提交", when],
+      ["当前状态", (status === "在跑" ? "●" : "") + status]
+    ];
+    return '<div class="dcode">REPO · ' + esc(String(r.name).toUpperCase().slice(0, 14)) + '</div>' +
+      '<div class="dname"><b>' + esc(r.name) + '</b>' + (status ? '<span class="dbadge">' + esc(status) + '</span>' : "") + '</div>' +
+      '<div class="ddesc">' + esc(isTop && W.detail.desc ? W.detail.desc : (note ? "最近动态：" + note : "")) + '</div>' +
+      rows.map(drow).join("") +
+      '<div class="advice"><b>调度建议</b>' + ((W.detail && W.detail.advice) || []).map(function (a) { return '<div class="li">' + esc(a) + '</div>'; }).join("") + '</div>';
+  }
+  function syncDetail() {
+    var box = document.getElementById("detailBox");
+    if (box && W.ring[focus]) box.innerHTML = detailHTML(W.ring[focus]);
+  }
   function drow(r) {
     var v = esc(r[1])
       .replace("●", '<span class="sdot" style="background:var(--green-hi);box-shadow:0 0 8px hsla(' + h + ',90%,45%,.55)"></span>')
@@ -457,13 +538,13 @@ window.WORKBENCH = {
       '<div class="stats">' + W.stats.map(statCard).join("") + '</div>' +
       '<div class="grid">' + queuePanelHTML("qpanel") +
       '<div class="panel stage-wrap">' +
-        '<div class="toolbar"><span class="tb on">3D 环境</span><span class="tb" id="matBtn">流体材质</span><span class="tb" id="resetV">复位视角</span>' +
+        '<div class="toolbar"><span class="tb on">3D 环境</span><span class="tb" id="spin">自动巡航</span><span class="tb" id="matBtn">流体材质</span><span class="tb" id="resetV">复位视角</span>' +
         '<span class="tb mono" style="margin-left:auto">' + (LIVE ? "生成 " + esc(LIVE.generated) : "示意") + '</span></div>' +
         '<div class="stage"><div class="glowbg"></div>' +
           '<div class="prog"><div class="t">' + esc(W.progress.label) + '</div><div class="v">' + W.progress.value + '%</div>' +
           '<div class="s">' + esc(W.progress.sub) + '</div><div class="bar"><i style="width:' + W.progress.value + '%"></i></div></div>' +
-          '<div class="ring" id="ring">' + renderRing() + '</div>' +
-          '<div class="hint">点击卡片聚焦 · 队列点行勾掉 <b id="hintName">' + esc((W.ring[focus] || {}).name || "") + '</b></div>' +
+          '<div class="ring" id="ring"></div>' +
+          '<div class="hint">自动巡航中 · 点击卡片聚焦 <b id="hintName">' + esc((W.ring[focus] || {}).name || "") + '</b></div>' +
         '</div>' +
         '<div class="timeline"><div class="row1"><b>推进时间轴</b><span class="mono" style="font-size:10.5px;color:var(--fg-4)">' + d.getFullYear() + ' 年 ' + (d.getMonth()+1) + ' 月</span>' +
         '<span class="tb on mono" style="margin-left:auto;padding:4px 10px">今天</span></div>' +
@@ -471,11 +552,8 @@ window.WORKBENCH = {
         '<div class="bar"><i style="width:' + Math.round(d.getDate() / 31 * 100) + '%"></i></div></div>' +
       '</div>' +
       '<div class="panel dpanel detail">' +
-        '<div class="dhd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green-hi)" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 13.9 9l5.6 1.9-5.6 1.9L12 18.5l-1.9-5.7L4.5 10.9 10.1 9z"/></svg>智能详情</div>' +
-        '<div class="dcode">' + esc(det.code) + '</div>' +
-        '<div class="dname"><b>' + esc(det.name) + '</b><span class="dbadge">' + esc(det.badge) + '</span></div>' +
-        '<div class="ddesc">' + esc(det.desc) + '</div>' + det.rows.map(drow).join("") +
-        '<div class="advice"><b>调度建议</b>' + det.advice.map(function (a) { return '<div class="li">' + esc(a) + '</div>'; }).join("") + '</div>' +
+        '<div class="dhd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green-hi)" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 13.9 9l5.6 1.9-5.6 1.9L12 18.5l-1.9-5.7L4.5 10.9 10.1 9z"/></svg>智能详情<span class="mono" style="margin-left:auto;font-size:9.5px;color:var(--fg-4)">跟随卡环</span></div>' +
+        '<div id="detailBox" style="display:flex;flex-direction:column;min-height:0"></div>' +
         '<div class="dbtns"><div class="dbtn ghost">打开仓库</div><div class="dbtn solid">标记已推进</div></div>' +
       '</div></div>';
     return html;
@@ -577,14 +655,17 @@ window.WORKBENCH = {
       }
       tl.innerHTML = html;
     }
-    var ring = document.getElementById("ring");
-    if (ring) ring.addEventListener("click", function (e) {
-      var card = e.target.closest(".rcard");
-      if (!card || card.classList.contains("focus")) return;
-      focus = +card.dataset.i;
-      ring.innerHTML = renderRing();
-      var hn = document.getElementById("hintName");
-      if (hn) hn.textContent = W.ring[focus].name;
+    stopCruise();
+    buildRing();
+    var sp = document.getElementById("spin");
+    if (sp) sp.addEventListener("click", function () {
+      cruiseOn = !cruiseOn;
+      if (cruiseOn) { startCruise(); } else { stopCruise(); sp.classList.remove("on"); }
+    });
+    var rv = document.getElementById("resetV");
+    if (rv) rv.addEventListener("click", function () {
+      focus = Math.min(W.ringFocus || 0, Math.max(W.ring.length - 1, 0));
+      updateRing(); if (cruiseOn) startCruise();
     });
     var q = document.getElementById("q");
     if (q) q.addEventListener("input", function () {
