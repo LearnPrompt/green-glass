@@ -28,6 +28,8 @@ description: 绿透——纯黑底 + 流体玻璃 + 克制翠绿的个人工作�
 
 **待办是混合模式（定案）**：首次安装自动扫用户 vault 的勾选框收纳 todo——有混合信息比没有信息好，别因为怕噪音就留空。收件箱/归档类目录已默认排除，每条带来源文件名让用户自己分辨。在此基础上叠两层可选增强：① 用户有固定任务清单文件时加 `--todo-file <路径>`，该文件的未勾选项直接作为今日队列；② 刷新时 Claude 把当前会话里明确的待办策展补进 `queue.today`。
 
+**外部信息流**：采集器支持 `--rss <url1,url2>`，把任意 RSS/Atom 源变成工作台上的订阅区块（用户有自己的日报/雷达 feed 就接那个）。这是 customSections 协议的第一个应用——data 文件里的 `customSections: [{title, note?, rows:[{text, sub?, url?, time?, badge?}]}]` 数组，任何脚本都能往里塞区块，页面自动渲染。
+
 **「刷新我的工作台」**：重跑第 2 步同参数即可，页面刷新就是新数据。
 
 **从会话记录补待办**：collect.py 只认 vault 勾选框；当前对话里明确的待办事项，刷新时直接编辑 `workbench-data.js` 的 `queue.today` 数组补进去（保持同结构 `{text, badge, tone, time}`），这是 Claude 的活，不是脚本的。

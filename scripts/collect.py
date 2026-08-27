@@ -7,6 +7,8 @@
   python3 collect.py --projects ~/projects --vault ~/path/to/vault --out ~/Downloads
 """
 import argparse, json, os, re, subprocess, sys, time
+import urllib.request
+import xml.etree.ElementTree as ET
 from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -98,11 +100,49 @@ def scan_vault(vault: Path, max_tasks=6, max_backlog=5, max_files=500):
                               "time": datetime.fromtimestamp(mt).strftime("%m-%d"), "src": src, "file": relf})
     return todos, backlog, done_today
 
+def fetch_rss(url, max_items=6):
+    """抓一个 RSS/Atom 源，返回 customSections 协议的一个区块。只用标准库。"""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "green-glass-collect/1.0"})
+        raw = urllib.request.urlopen(req, timeout=10).read()
+        root = ET.fromstring(raw)
+    except Exception as e:
+        print(f"[rss] skip {url}: {e}", file=sys.stderr)
+        return None
+    ns = {"atom": "http://www.w3.org/2005/Atom"}
+    rows, feed_title = [], ""
+    chan = root.find("channel")
+    if chan is not None:  # RSS 2.0
+        feed_title = (chan.findtext("title") or "").strip()
+        for it in chan.findall("item")[:max_items]:
+            title = (it.findtext("title") or "").strip()
+            link = (it.findtext("link") or "").strip()
+            pub = (it.findtext("pubDate") or "")[:16].replace(",", "")
+            if title:
+                rows.append({"text": title[:60], "url": link, "time": pub.strip()[:12]})
+    elif root.tag.endswith("feed"):  # Atom
+        feed_title = (root.findtext("atom:title", namespaces=ns) or root.findtext("title") or "").strip()
+        for it in (root.findall("atom:entry", ns) or root.findall("entry"))[:max_items]:
+            title = (it.findtext("atom:title", namespaces=ns) or it.findtext("title") or "").strip()
+            link_el = it.find("atom:link", ns) if it.find("atom:link", ns) is not None else it.find("link")
+            link = link_el.get("href", "") if link_el is not None else ""
+            pub = (it.findtext("atom:updated", namespaces=ns) or it.findtext("updated") or "")[:10]
+            if title:
+                rows.append({"text": title[:60], "url": link, "time": pub})
+    if not rows:
+        return None
+    host = re.sub(r"^www\.", "", re.sub(r"^https?://", "", url).split("/")[0])
+    if ":" in feed_title:
+        feed_title = feed_title.split(":")[0].strip()
+    return {"title": feed_title[:20] or host, "note": host, "rows": rows}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--projects", required=True)
     ap.add_argument("--vault", default="")
     ap.add_argument("--todo-file", default="", help="指定一个 md，其中未勾选项直接进今日队列")
+    ap.add_argument("--rss", default="", help="逗号分隔的 RSS/Atom 源，生成自定义区块（customSections 协议的第一个应用）")
     ap.add_argument("--out", default=".")
     a = ap.parse_args()
 
@@ -152,13 +192,20 @@ def main():
         daily.update(r["days"])
     refresh_cmd = "python3 " + os.path.abspath(__file__) + " --projects " + a.projects + \
         (" --vault " + a.vault if a.vault else "") + \
-        (" --todo-file " + a.todo_file if a.todo_file else "") + " --out " + a.out
+        (" --todo-file " + a.todo_file if a.todo_file else "") + \
+        (" --rss " + a.rss if a.rss else "") + " --out " + a.out
+    sections = []
+    for u in [x.strip() for x in a.rss.split(",") if x.strip()]:
+        sec = fetch_rss(u)
+        if sec:
+            sections.append(sec)
     data = {
         "generated": datetime.now().strftime("%m-%d %H:%M"),
         "generatedEpoch": int(time.time()),
         "vaultName": Path(a.vault).expanduser().resolve().name if a.vault else "",
         "dailyCommits": dict(daily),
         "refreshCmd": refresh_cmd,
+        "customSections": sections,
         "stats": [
             {"cap": "Today / 今日提交", "name": "跨仓库提交", "value": str(commits_today), "unit": "个",
              "note": "已完成待办", "delta": f"✓ {done_today}", "tone": "up"},
